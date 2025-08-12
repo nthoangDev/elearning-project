@@ -1,0 +1,90 @@
+extends ../../layouts/default
+include ../../mixins/filter-status.pug
+include ../../mixins/search.pug
+include ../../mixins/pagination.pug
+include ../../mixins/form-change-multi.pug
+
+block main
+  //- Toolbar
+  .d-flex.flex-wrap.justify-content-between.align-items-center.mb-3.gap-2
+    h3.mb-0 Quản lý khóa học
+    a.btn.btn-primary(href=`${prefixAdmin}/courses/create`)
+      i.bi.bi-plus-circle.me-1
+      | Tạo khóa học
+
+  //- Bộ lọc & tìm kiếm
+  .d-flex.flex-wrap.align-items-center.justify-content-between.mb-3.gap-2
+    +filter-status(filterStatus)
+    +form-change-multi(`${prefixAdmin}/courses/change-multi?_method=PATCH`)
+    +search(keyword)
+
+
+  //- Bảng danh sách
+  .table-responsive
+    table.table.table-hover.align-middle(checkbox-multi)
+      thead.table-light
+        tr
+          th(style="width:44px;")
+            input.form-check-input#checkAll(type="checkbox", aria-label="Chọn tất cả")
+          th(style="width:80px;") Ảnh
+          th Tiêu đề
+          th(style="width:16%") Chủ đề
+          th(style="width:12%") Giá
+          th(style="width:14%") Trạng thái
+          th(style="width:22%") Giảng viên
+          th(style="width:140px") Hành động
+      tbody
+        if !courses || courses.length === 0
+          tr
+            td(colspan="8").text-center.text-muted.py-4
+              i.bi.bi-journal-x.me-2
+              | Chưa có khóa học
+        else
+          each c in courses
+            - const hasImage = !!c.imageUrl;
+            - const priceNumber = Number(c.price) || 0;
+            - const priceText = priceNumber.toLocaleString('vi-VN') + '₫';
+            - const topicName = (c.topic && c.topic.name) ? c.topic.name : '—';
+            //- Badge theo trạng thái
+            - let badgeClass = 'secondary', statusLabel = c.status;
+            - if (c.status === 'PUBLISHED') { badgeClass = 'success'; statusLabel = 'Đã xuất bản'; }
+            - else if (c.status === 'DRAFT') { badgeClass = 'warning'; statusLabel = 'Bản nháp'; }
+            - else if (c.status === 'UNLISTED') { badgeClass = 'info'; statusLabel = 'Không liệt kê'; }
+            - else if (c.status === 'ARCHIVED') { badgeClass = 'secondary'; statusLabel = 'Đã lưu trữ'; }
+            tr
+              td
+                input.form-check-input.checkbox-item(type="checkbox", name="ids", value=c._id, aria-label= `Chọn ${c.title}`)
+              td
+                if hasImage
+                  img(src=c.imageUrl, alt=c.title, width="64", height="40", style="object-fit:cover;border-radius:6px;")
+              td
+                .fw-semibold= c.title
+              td= topicName
+              td= priceText
+              td
+                .d-flex.align-items-center.gap-2
+                  span.badge(class=`text-bg-${badgeClass}`)= statusLabel
+                  button.btn.btn-sm.btn-outline-secondary.button-change-status(
+                    type="button"
+                    data-id=c._id
+                    data-current=c.status
+                  ) 
+                    i.bi.bi-arrow-repeat
+              td
+                - const names = (c.instructors || []).map(i => i.user?.fullName || i.user?.email).filter(Boolean).join(', ')
+                = names || '—'
+              td
+                .d-flex.gap-2
+                  a.btn.btn-sm.btn-outline-primary(href=`${prefixAdmin}/courses/${c._id}/edit`, title="Sửa")
+                    i.bi.bi-pencil-square
+                    span.d-none.d-md-inline.ms-1 Sửa
+                  button.btn.btn-sm.btn-outline-danger.button-delete(type="button", data-id=c._id, title="Xoá")
+                    i.bi.bi-trash
+                    span.d-none.d-md-inline.ms-1 Xoá
+  +pagination(pagination)
+  //- Forms ẩn cho JS
+  form#form-change-status(method="post" data-path=`${prefixAdmin}/courses`)
+  form#form-delete-item(method="post"  data-path=`${prefixAdmin}/courses`)
+
+block scripts
+  script(src="/public/admin/js/course.js") 

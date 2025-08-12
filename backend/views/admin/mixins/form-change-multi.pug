@@ -1,0 +1,23 @@
+mixin form-change-multi(path)
+  form(
+    action=path
+    method="post"
+    form-change-multi
+    class="mb-3"
+  )
+    .d-flex.align-items-center.gap-2
+        .form-group
+            // Chọn hành động bulk
+            select(name="type" required class="form-select")
+                option(value="" disabled selected) -- Chọn hành động --
+                optgroup(label="Đổi trạng thái")
+                    option(value="status:PUBLISHED") Đặt PUBLISHED
+                    option(value="status:DRAFT")     Đặt DRAFT
+                    option(value="status:UNLISTED")  Đặt UNLISTED
+                    option(value="status:ARCHIVED")  Đặt ARCHIVED
+                optgroup(label="Khác")
+                    option(value="delete")   Xoá mềm
+                    option(value="restore")  Khôi phục
+        //- input ẩn để JS nhét danh sách id (ngăn cách bằng dấu phẩy)
+        input(type="hidden" name="ids" value="")
+        button(type="submit" class="btn btn-primary") Áp dụng
