@@ -13,15 +13,13 @@ module.exports.list = async (req, res) => {
     // Tìm kiếm 
     const objSearch = searchHelper(req.query);
     if (objSearch.regex) {
-        filters.title = objSearch.keyword;
+        filters.title = objSearch.regex;
     }
-
 
     // Lọc 
     if (req.query.status) filters.status = req.query.status;
-    // if (req.query.topic) filters.topic = req.query.topic;
-    // if (req.query.instructor) filters['instructors.user'] = req.query.instructor;
 
+    //Phân trang
     const count = await Course.countDocuments(filters);
     const pagi = pagination(req.query, count, 12)
 
@@ -31,7 +29,6 @@ module.exports.list = async (req, res) => {
         .sort({ publishedAt: -1 })
         .skip(pagi.skip)
         .limit(pagi.limitItem);
-    // console.info(items)
 
     res.render('admin/pages/courses/index', {
         pageTitle: "Quản lý khóa học",
@@ -60,11 +57,11 @@ module.exports.changeStatus = async (req, res) => {
 
 // [POST] /admin/courses/change-multi
 module.exports.changeMulti = async (req, res) => {
-    const type = req.body.type;  
-    const ids = (req.body.ids || '')
+    const type = req.body.type; // trong html
+    const ids = (req.body.inputIds || '') // gửi thông qua scripts.js
         .split(',')
         .map(s => s.trim())
-        .filter(Boolean);
+        .filter(Boolean); 
 
     if (!ids.length || !type) {
         return res.redirect(req.get('referer') || '/admin/courses');
@@ -80,8 +77,6 @@ module.exports.changeMulti = async (req, res) => {
         await Course.updateMany({ _id: { $in: ids } }, { $set: { status: next } });
     } else if (type === 'delete') {
         await Course.updateMany({ _id: { $in: ids } }, { $set: { deleted: true } });
-    } else if (type === 'restore') {
-        await Course.updateMany({ _id: { $in: ids } }, { $set: { deleted: false } });
     }
 
     res.redirect(req.get('referer') || '/admin/courses');

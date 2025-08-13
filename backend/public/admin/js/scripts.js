@@ -66,12 +66,12 @@ document.addEventListener('DOMContentLoaded', () => {
       const checked = wrap ? wrap.querySelectorAll("input[name='ids']:checked") : [];
       if (!checked.length) return alert('Vui lòng chọn ít nhất một bản ghi!!!');
 
-      const ids = Array.from(checked).map((inp) => inp.value);
-      let inputIds = formChangeMulti.querySelector("input[name='ids']");
+      const ids = Array.from(checked).map(inp => inp.value);
+      let inputIds = formChangeMulti.querySelector("input[name='inputIds']");
       if (!inputIds) {
         inputIds = document.createElement('input');
         inputIds.type = 'hidden';
-        inputIds.name = 'ids';
+        inputIds.name = 'inputIds';
         formChangeMulti.appendChild(inputIds);
       }
       inputIds.value = ids.join(',');

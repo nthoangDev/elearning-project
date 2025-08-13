@@ -17,7 +17,6 @@ mixin form-change-multi(path)
                     option(value="status:ARCHIVED")  Đặt ARCHIVED
                 optgroup(label="Khác")
                     option(value="delete")   Xoá mềm
-                    option(value="restore")  Khôi phục
         //- input ẩn để JS nhét danh sách id (ngăn cách bằng dấu phẩy)
-        input(type="hidden" name="ids" value="")
+        input(type="hidden" name="inputIds" value="")
         button(type="submit" class="btn btn-primary") Áp dụng
