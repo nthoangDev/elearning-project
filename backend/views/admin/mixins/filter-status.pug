@@ -1,16 +1,22 @@
 mixin filter-status(filterStatus)
   if filterStatus && filterStatus.length
-    ul.nav.nav-pills.mb-3.gap-2
-      each s in filterStatus
-        - const isAll = s.value === 'all' || s.value === '';
-        - const href = isAll ? '?' : `?status=${s.value}`;
-        - const isActive = s.active || s.class === 'active';
-        li.nav-item
-          a.nav-link.d-flex.align-items-center.gap-2.px-3.py-2.rounded-pill.fw-semibold(
-            href=href
-            class=isActive ? 'active shadow-sm' : 'bg-body-tertiary text-body-secondary border'
-            aria-current=isActive ? 'page' : false
-          )
-            span= s.label
-
-            
+    .filter-status-wrapper.mb-4
+      .filter-header.mb-2
+        span.filter-title
+          i.bi.bi-funnel-fill.me-2
+          | Lọc theo trạng thái
+      .filter-pills
+        ul.nav.nav-pills.gap-2.filter-nav
+          each s in filterStatus
+            - const isAll = s.value === 'all' || s.value === '';
+            - const href = isAll ? '?' : `?status=${s.value}`;
+            - const isActive = s.active || s.class === 'active';
+            li.nav-item
+              a.nav-link.filter-pill(
+                href=href
+                class=isActive ? 'active shadow-sm' : ''
+                aria-current=isActive ? 'page' : false
+              )
+                span.filter-label= s.label
+                if isActive
+                  i.bi.bi-check2-circle.ms-1

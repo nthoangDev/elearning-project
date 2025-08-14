@@ -1,6 +1,8 @@
 const Course = require('../../models/course.model');
 const Topic = require('../../models/topic.model');
 const User = require('../../models/user.models');
+const fs = require('fs');
+const cloudinary = require('../../config/cloudinary');
 
 const searchHelper = require("../../helpers/search");
 const filterStatus = require("../../helpers/filterStatus");
@@ -61,7 +63,7 @@ module.exports.changeMulti = async (req, res) => {
     const ids = (req.body.inputIds || '') // gửi thông qua scripts.js
         .split(',')
         .map(s => s.trim())
-        .filter(Boolean); 
+        .filter(Boolean);
 
     if (!ids.length || !type) {
         return res.redirect(req.get('referer') || '/admin/courses');
@@ -90,3 +92,72 @@ module.exports.deleteItem = async (req, res) => {
 };
 
 
+// GET /admin/courses/create
+module.exports.showCreate = async (req, res) => {
+    const [topics, instructors] = await Promise.all([
+        Topic.find({}).select('name').sort('name'),
+        User.find({ roles: 'INSTRUCTOR', status: 'ACTIVE' })
+            .select('fullName email')
+            .sort('fullName')
+    ]);
+
+    res.render('admin/pages/courses/form', {
+        pageTitle: "Tạo khóa học",
+        activeMenu: 'courses',
+        mode: 'create',
+        topics, instructors,
+        course: {}
+    });
+
+}
+
+// POST /admin/courses/create
+module.exports.create = async (req, res) => {
+    try {
+        // Nếu file sai định dạng từ multer -> render lại form
+        if (req.fileValidationError) {
+            const [topics, instructors] = await Promise.all([
+                Topic.find({}).select('name'),
+                User.find({ roles: 'INSTRUCTOR', status: 'ACTIVE' }).select('fullName email')
+            ]);
+            return res.status(400).render('admin/pages/courses/form', {
+                pageTitle: 'Tạo khóa học',
+                mode: 'create',
+                topics, instructors,
+                course: req.body,
+                error: req.fileValidationError
+            });
+        }
+
+        const instructorIds = []
+            .concat(req.body.instructors || [])
+            .filter(Boolean);
+
+        const payload = {
+            title: req.body.title?.trim(),
+            slug: req.body.slug?.trim(),
+            description: req.body.description,
+            topic: req.body.topic || null,
+            level: req.body.level || 'BEGINNER',
+            price: Number(req.body.price || 0),
+            salePrice: req.body.salePrice ? Number(req.body.salePrice) : undefined,
+            status: req.body.status || 'DRAFT',
+            visibility: req.body.visibility || 'PUBLIC',
+            instructors: instructorIds.map(id => ({ user: id, role: 'MAIN' }))
+        };
+
+        if (req.file) {
+            const folder = process.env.CLOUDINARY_FOLDER_COURSES || 'elearning/courses';
+            const result = await cloudinary.uploader.upload(req.file.path, { folder, resource_type: 'image' });
+            payload.imageUrl = result.secure_url;
+            fs.unlink(req.file.path, () => { });
+        }
+
+        await Course.create(payload);
+        res.redirect(`${req.app.locals.prefixAdmin}/courses`);
+    } catch (err) {
+        if (req.file?.path) fs.unlink(req.file.path, () => { });
+        if (err.code === 11000 && err.keyPattern?.slug) return res.redirect('back'); 
+        throw err;
+    }
+};
