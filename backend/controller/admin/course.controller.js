@@ -157,7 +157,116 @@ module.exports.create = async (req, res) => {
         res.redirect(`${req.app.locals.prefixAdmin}/courses`);
     } catch (err) {
         if (req.file?.path) fs.unlink(req.file.path, () => { });
-        if (err.code === 11000 && err.keyPattern?.slug) return res.redirect('back'); 
+        if (err.code === 11000 && err.keyPattern?.slug) return res.redirect('back');
+        throw err;
+    }
+};
+
+// GET /admin/courses/:id/edit
+module.exports.showEdit = async (req, res) => {
+    const id = req.params.id;
+
+    const [course, topics, instructors] = await Promise.all([
+        Course.findById(id),
+        Topic.find({}).select('name').sort('name'),
+        User.find({ roles: 'INSTRUCTOR', status: 'ACTIVE' })
+            .select('fullName email')
+            .sort('fullName')
+    ]);
+
+    if (!course) return res.status(404).send('Course not found');
+
+    res.render('admin/pages/courses/form', {
+        pageTitle: 'Sửa khóa học',
+        activeMenu: 'courses',
+        mode: 'edit',
+        topics,
+        instructors,
+        course
+    });
+};
+
+
+// PUT /admin/courses/:id/edit
+module.exports.update = async (req, res) => {
+    const id = req.params.id;
+
+    try {
+        if (req.fileValidationError) {
+            const [course, topics, instructors] = await Promise.all([
+                Course.findById(id),
+                Topic.find({}).select('name').sort('name'),
+                User.find({ roles: 'INSTRUCTOR', status: 'ACTIVE' })
+                    .select('fullName email')
+                    .sort('fullName')
+            ]);
+
+            return res.status(400).render('admin/pages/courses/form', {
+                pageTitle: 'Sửa khóa học',
+                activeMenu: 'courses',
+                mode: 'edit',
+                topics,
+                instructors,
+                course: { ...(course?.toObject() || {}), ...req.body },
+                error: req.fileValidationError
+            });
+        }
+
+        const old = await Course.findById(id);
+        if (!old) return res.status(404).send('Course not found');
+
+        const instructorIds = []
+            .concat(req.body.instructors || [])
+            .filter(Boolean);
+
+        // dữ liệu cập nhật
+        const update = {
+            title: (req.body.title || '').trim(),
+            slug: (req.body.slug || '').trim(),
+            description: req.body.description,
+            topic: req.body.topic || null,
+            level: req.body.level || 'BEGINNER',
+            price: Number(req.body.price || 0),
+            salePrice: req.body.salePrice ? Number(req.body.salePrice) : undefined,
+            status: req.body.status || 'DRAFT',
+            visibility: req.body.visibility || 'PUBLIC',
+            instructors: instructorIds.map(id => ({ user: id, role: 'MAIN' }))
+        };
+
+        // ảnh mới -> upload Cloudinary rồi xóa file tạm
+        if (req.file) {
+            const folder = process.env.CLOUDINARY_FOLDER_COURSES || 'elearning/courses';
+            const result = await cloudinary.uploader.upload(req.file.path, {
+                folder,
+                resource_type: 'image'
+            });
+            update.imageUrl = result.secure_url;
+            fs.unlink(req.file.path, () => { });
+        }
+
+        await Course.findByIdAndUpdate(id, update);
+        res.redirect(`${req.app.locals.prefixAdmin}/courses`);
+    } catch (err) {
+        if (req.file?.path) fs.unlink(req.file.path, () => { });
+        // slug trùng → render lại form với lỗi dễ hiểu
+        if (err.code === 11000 && err.keyPattern?.slug) {
+            const [course, topics, instructors] = await Promise.all([
+                Course.findById(id),
+                Topic.find({}).select('name').sort('name'),
+                User.find({ roles: 'INSTRUCTOR', status: 'ACTIVE' })
+                    .select('fullName email')
+                    .sort('fullName')
+            ]);
+            return res.status(400).render('admin/pages/courses/form', {
+                pageTitle: 'Sửa khóa học',
+                activeMenu: 'courses',
+                mode: 'edit',
+                topics,
+                instructors,
+                course: { ...(course?.toObject() || {}), ...req.body },
+                error: 'Slug đã tồn tại, vui lòng chọn slug khác.'
+            });
+        }
         throw err;
     }
 };

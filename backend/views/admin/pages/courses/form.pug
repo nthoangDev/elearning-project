@@ -12,7 +12,7 @@ block main
             enctype="multipart/form-data"
             action=(mode==='create'
                 ? `${prefixAdmin}/courses/create`
-                : `${prefixAdmin}/courses/${course._id}?_method=PUT`
+                : `${prefixAdmin}/courses/${course._id}/edit?_method=PUT`
             )
         )
             .form-card

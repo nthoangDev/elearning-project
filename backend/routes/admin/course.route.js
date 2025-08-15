@@ -13,4 +13,9 @@ router.delete('/:id', controller.deleteItem);
 router.get('/create', controller.showCreate);
 router.post('/create', uploadCourseImage , controller.create);
 
+//edit
+router.get('/:id/edit', controller.showEdit);
+router.put('/:id/edit', uploadCourseImage, controller.update);
+
+
 module.exports = router;

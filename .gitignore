@@ -24,3 +24,5 @@ TestResults.xml
 node_modules/
 # Environment config
 .env
+# tmp
+tmp/
