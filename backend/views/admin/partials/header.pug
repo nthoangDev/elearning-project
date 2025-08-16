@@ -1,0 +1,19 @@
+header.header.bg-dark.text-white.py-2.shadow-sm
+  .container-fluid
+    .d-flex.align-items-center.justify-content-between
+      //- Logo & Tiêu đề
+      a.d-flex.align-items-center.text-white.text-decoration-none(href="/admin/dashboard")
+        img(src="/public/images/logo.png", alt="E-Learning Admin", class="me-2")
+        span.fw-bold.fs-5 E-Learning Admin
+
+      //- Thanh điều hướng / Menu bên phải
+      nav
+        ul.nav
+          li.nav-item
+            a.nav-link.text-white(href="/admin/profile")
+              i.bi.bi-person-circle.me-1
+              | Hồ sơ
+          li.nav-item
+            a.nav-link.text-white(href="/logout")
+              i.bi.bi-box-arrow-right.me-1
+              | Đăng xuất

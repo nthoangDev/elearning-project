@@ -1,0 +1,135 @@
+extends ../../layouts/default
+
+block styles
+    link(rel="stylesheet", href="/public/admin/css/course-form.css")
+
+block main
+    .course-form-container
+        h3.page-title= mode==='create' ? 'Tạo khóa học' : 'Sửa khóa học'
+
+        form(
+            method="post"
+            enctype="multipart/form-data"
+            action=(mode==='create'
+                ? `${prefixAdmin}/courses/create`
+                : `${prefixAdmin}/courses/${course._id}/edit?_method=PUT`
+            )
+        )
+            .form-card
+                .row
+                    .col-md-8
+                        .form-section
+                            .section-title
+                                i.bi.bi-info-circle
+                                | Thông tin cơ bản
+                            
+                            .mb-4
+                                label.form-label Tiêu đề
+                                input.form-control.form-control-lg(
+                                    type="text" 
+                                    name="title" 
+                                    required 
+                                    value=course.title
+                                    placeholder="Nhập tiêu đề khóa học"
+                                )
+                            
+                            .mb-4
+                                label.form-label Đường dẫn (Slug)
+                                input.form-control(
+                                    type="text" 
+                                    name="slug" 
+                                    required 
+                                    value=course.slug
+                                    placeholder="duong-dan-khoa-hoc"
+                                )
+                            
+                            .mb-4
+                                label.form-label Mô tả
+                                textarea.form-control(
+                                    name="description" 
+                                    rows="6"
+                                    placeholder="Nhập mô tả chi tiết về khóa học..."
+                                )= course.description
+
+                    .col-md-4
+                        .form-section
+                            .section-title
+                                i.bi.bi-gear
+                                | Cài đặt
+                            
+                            .mb-3
+                                label.form-label Chủ đề
+                                if topics && topics.length
+                                    select.form-select(name="topic")
+                                        option(value="") -- Chọn chủ đề --
+                                        each t in topics
+                                            option(value=t._id selected=(course.topic && String(course.topic)===String(t._id)))= t.name
+                                else
+                                    .no-data Chưa có chủ đề nào
+                            
+                            .mb-3
+                                label.form-label Cấp độ
+                                select.form-select(name="level")
+                                    - const levels = [['BEGINNER', 'Cơ bản'], ['INTERMEDIATE', 'Trung cấp'], ['ADVANCED', 'Nâng cao']]
+                                    each lv in levels
+                                        option(value=lv[0] selected=(course.level===lv[0]))= lv[1]
+                            
+                            .mb-3
+                                label.form-label Giá gốc
+                                .price-input
+                                    input.form-control(
+                                        type="number" 
+                                        step="1000" 
+                                        name="price" 
+                                        value=course.price
+                                        placeholder="0"
+                                    )
+                            
+                            .mb-3
+                                label.form-label Giá khuyến mãi
+                                .price-input
+                                    input.form-control(
+                                        type="number" 
+                                        step="1000" 
+                                        name="salePrice" 
+                                        value=course.salePrice
+                                        placeholder="0"
+                                    )
+                            
+                            .mb-3
+                                label.form-label Trạng thái
+                                select.form-select(name="status")
+                                    - const statuses = [['DRAFT', 'Bản nháp'], ['PUBLISHED', 'Đã xuất bản'], ['UNLISTED', 'Không công khai'], ['ARCHIVED', 'Lưu trữ']]
+                                    each s in statuses
+                                        option(value=s[0] selected=(course.status===s[0]))= s[1]
+                            
+                            .mb-3
+                                label.form-label Hiển thị
+                                select.form-select(name="visibility")
+                                    option(value="PUBLIC" selected=(course.visibility==='PUBLIC')) Công khai
+                                    option(value="PRIVATE" selected=(course.visibility==='PRIVATE')) Riêng tư
+                            
+                            .mb-3
+                                label.form-label Ảnh khóa học
+                                input.form-control(type="file" name="image" accept="image/*")
+                                if course.imageUrl
+                                    .image-preview
+                                        img(src=course.imageUrl width="120" alt="Course image")
+                            
+                            .mb-3
+                                label.form-label Giảng viên phụ trách
+                                if instructors && instructors.length
+                                    select.form-select(name="instructors" multiple)
+                                        each ins in instructors
+                                            - const selected = (course.instructors || []).some(x => String(x.user?._id || x.user) === String(ins._id))
+                                            option(value=ins._id selected=selected)= ins.fullName || ins.email
+                                else
+                                    .no-data Chưa có giảng viên nào
+
+                .btn-group
+                    a.btn.btn-secondary(href=`${prefixAdmin}/courses`)
+                        i.bi.bi-arrow-left
+                        | Hủy
+                    button.btn.btn-primary(type="submit")
+                        i.bi.bi-check-lg
+                        | Lưu khóa học
