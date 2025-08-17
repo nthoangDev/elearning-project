@@ -1,0 +1,120 @@
+extends ../../layouts/default
+include ../../mixins/filter-status.pug
+include ../../mixins/search.pug
+include ../../mixins/pagination.pug
+include ../../mixins/form-change-multi-user.pug
+
+block head
+  link(rel="stylesheet", href="/public/admin/css/user-list.css")
+
+block main
+  //- Page Header
+  .page-header
+    .d-flex.flex-wrap.justify-content-between.align-items-center.gap-2
+      h3.page-title Quản lý người dùng
+      a.create-btn(href=`${prefixAdmin}/users/create`)
+        i.bi.bi-plus-circle
+        | Tạo người dùng
+
+  //- Filter & Search Bar
+  .filter-bar
+    +filter-status(filterStatus)
+    +form-change-multi-user(`${prefixAdmin}/users/change-multi?_method=PATCH`)
+    +search(keyword)
+
+  //- Main Table
+  .table-container
+    .table-responsive
+      table.table.table-hover.align-middle(checkbox-multi)
+        thead
+          tr
+            th(style="width:44px;")
+              input.form-check-input#checkAll(type="checkbox", aria-label="Chọn tất cả")
+            th Họ tên
+            th Email
+            th(style="width:15%") Vai trò
+            th(style="width:20%") Trạng thái
+            th(style="width:550px") Hành động
+        tbody
+          if !users || users.length === 0
+            tr
+              td(colspan="6").empty-state
+                i.bi.bi-people
+                div Chưa có người dùng nào
+                small.text-muted Hãy tạo người dùng đầu tiên
+          else
+            each u in users
+              - const rolesArr = Array.isArray(u.roles) ? u.roles : [];
+              - const hasInstructor = rolesArr.includes('INSTRUCTOR');
+              - const hasAdmin = rolesArr.includes('ADMIN');
+              - let statusClass = 'archived', statusLabel = u.status || 'INACTIVE';
+              - if (u.status === 'ACTIVE')  { statusClass = 'published'; statusLabel = 'Đang hoạt động'; }
+              - else if (u.status === 'LOCKED') { statusClass = 'draft'; statusLabel = 'Đã khoá'; }
+              - else { statusClass = 'archived'; statusLabel = 'Không hoạt động'; }
+
+              tr
+                td
+                  input.form-check-input.checkbox-item(type="checkbox", name="ids", value=u._id)
+                td
+                  h6.mb-0= u.fullName || '(chưa đặt tên)'
+                td= u.email
+                td
+                  if rolesArr.length
+                    .instructor-names
+                      = rolesArr.join(', ')
+                  else
+                    span.text-muted — 
+                td
+                  .status-group
+                    span.status-badge(class=`status-${statusClass}`)= statusLabel
+                    button.btn.btn-sm.btn-change-status.button-change-status(
+                                          type="button"
+                                          data-id=u._id
+                                          data-current=u.status
+                                          title="Thay đổi trạng thái"
+                                      ) 
+                                          i.bi.bi-arrow-repeat
+                td
+                  .action-buttons
+                    a.btn-action.btn-edit(
+                      href=`${prefixAdmin}/users/${u._id}/edit`,
+                      title="Chỉnh sửa người dùng"
+                    )
+                      i.bi.bi-pencil-square
+                      span Sửa
+
+                    //- Toggle LOCK/UNLOCK
+                    form.d-inline(method="post" action=`${prefixAdmin}/users/${u._id}/toggle-lock?_method=PATCH`)
+                      button.btn-action(type="submit" title=u.status==='LOCKED' ? 'Mở khoá' : 'Khoá' class=u.status==='LOCKED' ? 'btn-success' : 'btn-warning')
+                        i.bi.bi-shield-lock
+                        span= u.status==='LOCKED' ? 'Mở khoá' : 'Khoá'
+
+                    //- Grant/Revoke INSTRUCTOR
+                    - const instPath = `${prefixAdmin}/users/${u._id}/${hasInstructor ? 'revoke-instructor' : 'grant-instructor'}?_method=PATCH`;
+                    form.d-inline(method="post" action=instPath)
+                      button.btn-action(type="submit" title=hasInstructor ? 'Thu Instructor' : 'Cấp Instructor' class=hasInstructor ? 'btn-warning' : 'btn-success')
+                        i.bi.bi-person-badge
+                        span= hasInstructor ? 'Thu Instructor' : 'Cấp Instructor'
+
+                    //- Grant/Revoke ADMIN
+                    - const adminPath = `${prefixAdmin}/users/${u._id}/${hasAdmin ? 'revoke-admin' : 'grant-admin'}?_method=PATCH`;
+                    form.d-inline(method="post" action=adminPath)
+                      button.btn-action(type="submit" title=hasAdmin ? 'Thu Admin' : 'Cấp Admin' class=hasAdmin ? 'btn-warning' : 'btn-success')
+                        i.bi.bi-person-gear
+                        span= hasAdmin ? 'Thu Admin' : 'Cấp Admin'
+
+                    //- Vô hiệu hoá (DELETE mềm tuỳ controller)
+                    form.d-inline(method="post" action=`${prefixAdmin}/users/${u._id}?_method=DELETE` onsubmit="return confirm('Vô hiệu hoá user này?');")
+                      button.btn-action.btn-delete(type="submit" title="Vô hiệu hoá")
+                        i.bi.bi-trash
+                        span Vô hiệu hoá
+
+  //- Pagination
+  +pagination(pagination)
+
+  //- Hidden Forms for JS (nếu cần mở rộng giống course.js thì thêm script riêng cho users)
+  form#form-change-status(method="post" data-path=`${prefixAdmin}/users`)
+  // form#form-delete-item(method="post" data-path=`${prefixAdmin}/users`)
+
+block scripts
+  script(src="/public/admin/js/user.js")

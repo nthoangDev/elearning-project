@@ -1,12 +1,6 @@
-const STATUSES = [
-    { value: 'DRAFT', label: 'Bản nháp' },
-    { value: 'PUBLISHED', label: 'Đã xuất bản' },
-    { value: 'UNLISTED', label: 'Không liệt kê' },
-    { value: 'ARCHIVED', label: 'Đã lưu trữ' }
-];
 
 
-module.exports = (query) => {
+module.exports = (query, status) => {
     const current = String(query.status || 'all').toUpperCase();
 
     const filters = [{
@@ -15,7 +9,7 @@ module.exports = (query) => {
         class: current === 'ALL' ? 'active' : '',
     }];
 
-    for (const s of STATUSES) {
+    for (const s of status) {
         filters.push({
             label: s.label,
             value: s.value,

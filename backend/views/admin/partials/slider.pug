@@ -1,7 +1,10 @@
-.slider 
-    .inner-menu 
-        ul  
-            li 
-                a(href=`${prefixAdmin}/dashboard`) Tổng quan 
-            li                
-                a(href=`${prefixAdmin}/courses`) Khóa học
+.slider
+  .inner-menu
+    ul
+        li(class= activeMenu === 'dashboard' ? 'active' : '')
+            a(href=`${prefixAdmin}/dashboard` aria-current= activeMenu==='dashboard' ? 'page' : false) Tổng quan
+        li(class= activeMenu === 'course' ? 'active' : '')
+            a(href=`${prefixAdmin}/courses` aria-current= activeMenu==='course' ? 'page' : false) Khóa học
+        li(class= activeMenu === 'users' ? 'active' : '')
+            a(href=`${prefixAdmin}/users` aria-current= activeMenu==='users' ? 'page' : false) Người dùng
+

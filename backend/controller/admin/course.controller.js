@@ -8,6 +8,14 @@ const searchHelper = require("../../helpers/search");
 const filterStatus = require("../../helpers/filterStatus");
 const pagination = require("../../helpers/pagination");
 
+const STATUSES = [
+    { value: 'DRAFT', label: 'Bản nháp' },
+    { value: 'PUBLISHED', label: 'Đã xuất bản' },
+    { value: 'UNLISTED', label: 'Không liệt kê' },
+    { value: 'ARCHIVED', label: 'Đã lưu trữ' }
+];
+
+
 // GET /admin/courses
 module.exports.list = async (req, res) => {
 
@@ -36,7 +44,7 @@ module.exports.list = async (req, res) => {
         pageTitle: "Quản lý khóa học",
         activeMenu: 'course',
         courses: items,
-        filterStatus: filterStatus(req.query, count),
+        filterStatus: filterStatus(req.query, STATUSES),
         pagination: pagi,
         keyword: req.query.keyword || ''
     });
