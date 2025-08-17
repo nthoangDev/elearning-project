@@ -1,0 +1,121 @@
+extends ../../layouts/default
+include ../../mixins/filter-status.pug
+include ../../mixins/search.pug
+include ../../mixins/pagination.pug
+include ../../mixins/form-change-multi.pug
+
+block head
+    link(rel="stylesheet", href="/public/admin/css/course-list.css")
+
+block main
+    //- Page Header
+    .page-header
+        .d-flex.flex-wrap.justify-content-between.align-items-center.gap-2
+            h3.page-title Quản lý khóa học
+            a.create-btn(href=`${prefixAdmin}/courses/create`)
+                i.bi.bi-plus-circle
+                | Tạo khóa học
+
+    //- Filter & Search Bar
+    .filter-bar
+        +filter-status(filterStatus)
+        +form-change-multi(`${prefixAdmin}/courses/change-multi?_method=PATCH`)
+        +search(keyword)
+
+    //- Main Table
+    .table-container
+        .table-responsive
+            table.table.table-hover.align-middle(checkbox-multi)
+                thead
+                    tr
+                        th(style="width:44px;")
+                            input.form-check-input#checkAll(type="checkbox", aria-label="Chọn tất cả")
+                        th(style="width:80px;") Ảnh
+                        th Tiêu đề
+                        th(style="width:16%") Chủ đề
+                        th(style="width:12%") Giá
+                        th(style="width:16%") Trạng thái
+                        th(style="width:20%") Giảng viên
+                        th(style="width:140px") Hành động
+                tbody
+                    if !courses || courses.length === 0
+                        tr
+                            td(colspan="8").empty-state
+                                i.bi.bi-journal-x
+                                div Chưa có khóa học nào
+                                small.text-muted Hãy tạo khóa học đầu tiên
+                    else
+                        each c in courses
+                            - const hasImage = !!c.imageUrl;
+                            - const priceNumber = Number(c.price) || 0;
+                            - const priceText = priceNumber.toLocaleString('vi-VN') + '₫';
+                            - const topicName = (c.topic && c.topic.name) ? c.topic.name : '—';
+                            
+                            //- Status mapping
+                            - let statusClass = 'archived', statusLabel = c.status;
+                            - if (c.status === 'PUBLISHED') { statusClass = 'published'; statusLabel = 'Đã xuất bản'; }
+                            - else if (c.status === 'DRAFT') { statusClass = 'draft'; statusLabel = 'Bản nháp'; }
+                            - else if (c.status === 'UNLISTED') { statusClass = 'unlisted'; statusLabel = 'Không liệt kê'; }
+                            - else if (c.status === 'ARCHIVED') { statusClass = 'archived'; statusLabel = 'Đã lưu trữ'; }
+                            
+                            tr
+                                td
+                                    input.form-check-input.checkbox-item(
+                                        type="checkbox", 
+                                        name="ids", 
+                                        value=c._id
+                                    )
+                                td
+                                    if hasImage
+                                        img.course-image(
+                                            src=c.imageUrl, 
+                                            alt=c.title
+                                        )
+                                    else
+                                        .course-image.d-flex.align-items-center.justify-content-center.bg-light
+                                            i.bi.bi-image.text-muted
+                                td
+                                    h6.course-title= c.title
+                                td
+                                    span.topic-display= topicName
+                                td
+                                    span.price-display= priceText
+                                td
+                                    .status-group
+                                        span.status-badge(class=`status-${statusClass}`)= statusLabel
+                                        button.btn.btn-sm.btn-change-status.button-change-status(
+                                            type="button"
+                                            data-id=c._id
+                                            data-current=c.status
+                                            title="Thay đổi trạng thái"
+                                        ) 
+                                            i.bi.bi-arrow-repeat
+                                td
+                                    .instructor-names
+                                        - const names = (c.instructors || []).map(i => i.user?.fullName || i.user?.email).filter(Boolean).join(', ')
+                                        = names || '—'
+                                td
+                                    .action-buttons
+                                        a.btn-action.btn-edit(
+                                            href=`${prefixAdmin}/courses/${c._id}/edit`, 
+                                            title="Chỉnh sửa khóa học"
+                                        )
+                                            i.bi.bi-pencil-square
+                                            span Sửa
+                                        button.btn-action.btn-delete.button-delete(
+                                            type="button", 
+                                            data-id=c._id, 
+                                            title="Xóa khóa học"
+                                        )
+                                            i.bi.bi-trash
+                                            span Xóa
+
+    //- Pagination
+    +pagination(pagination)
+    
+    //- Hidden Forms for JS
+    form#form-change-status(method="post" data-path=`${prefixAdmin}/courses`)
+    form#form-delete-item(method="post" data-path=`${prefixAdmin}/courses`)
+
+block scripts
+    script(src="/public/admin/js/course.js")
