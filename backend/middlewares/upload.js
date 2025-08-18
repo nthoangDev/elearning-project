@@ -37,5 +37,6 @@ function makeDiskUploader({ subdir, field = 'image', maxSizeMB = 2 }) {
 }
 
 const uploadCourseImage = makeDiskUploader({ subdir: 'courses' });
+const uploadAvatarImage = makeDiskUploader({ subdir: 'users', field: 'avatar'});
 
-module.exports = { makeDiskUploader, uploadCourseImage };
+module.exports = { makeDiskUploader, uploadCourseImage, uploadAvatarImage };

@@ -169,7 +169,7 @@ input:focus-visible {
   transform: translateX(2px);
 }
 
-.slider .inner-menu ul li a.active {
+.slider .inner-menu ul li.active a{
   background: var(--primary);
   color: white;
   box-shadow: var(--shadow-sm);

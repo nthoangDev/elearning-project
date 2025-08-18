@@ -1,0 +1,139 @@
+extends ../../layouts/default
+block styles
+    link(rel="stylesheet", href="/public/admin/css/user-form.css")
+
+block main
+  .form-container
+    // Header
+    .form-header
+      .d-flex.align-items-center.gap-3
+        i.bi.bi-person-gear.fs-2
+        div
+          h2= mode==='create' ? 'Tạo người dùng mới' : 'Chỉnh sửa thông tin người dùng'
+          p.mb-0= mode==='create' ? 'Nhập thông tin để tạo tài khoản mới' : 'Cập nhật thông tin tài khoản'
+
+    // Error Alert
+    if error
+      .alert.alert-danger
+        i.bi.bi-exclamation-triangle.me-2
+        = error
+
+    // Main Form Card
+    form(method="post" enctype="multipart/form-data" action= mode==='create' ? `${prefixAdmin}/users` : `${prefixAdmin}/users/${userDoc._id}?_method=PUT`)
+      .form-card
+        .p-4
+          .row
+            // Left Column - Basic Info
+            .col-lg-8
+              // Personal Information Section
+              .form-section
+                .section-title
+                  i.bi.bi-person
+                  | Thông tin cá nhân
+                
+                .row
+                  .col-md-6.mb-3
+                    label.form-label Họ và tên *
+                    input.form-control(type="text" name="fullName" required value=userDoc.fullName || '' placeholder="Nhập họ tên đầy đủ")
+                  
+                  .col-md-6.mb-3
+                    label.form-label Email *
+                    input.form-control(type="email" name="email" required value=userDoc.email || '' placeholder="email@example.com")
+                
+                .row
+                  .col-md-6.mb-3
+                    label.form-label Tên đăng nhập
+                    input.form-control(type="text" name="username" value=userDoc.username || '' placeholder="Để trống sẽ tự tạo từ email")
+                  
+                  .col-md-6.mb-3
+                    label.form-label Mật khẩu
+                    input.form-control(type="password" name="password" placeholder= mode==='create' ? "Mặc định: Password@123" : "Để trống nếu không thay đổi")
+
+              // Account Settings Section
+              .form-section
+                .section-title
+                  i.bi.bi-gear
+                  | Cài đặt tài khoản
+                
+                .row
+                  .col-md-6.mb-3
+                    label.form-label Trạng thái
+                    - const st = userDoc.status || 'ACTIVE'
+                    select.form-select(name="status")
+                      option(value="ACTIVE" selected=st==='ACTIVE') ✅ Hoạt động
+                      option(value="INACTIVE" selected=st==='INACTIVE') ⏸️ Tạm ngưng
+                      option(value="LOCKED" selected=st==='LOCKED') 🔒 Khóa
+
+                  .col-md-6.mb-3
+                    label.form-label Vai trò
+                    - const roles = userDoc.roles || (mode==='create' ? ['INSTRUCTOR'] : [])
+                    .role-group
+                      .form-check.form-check-inline
+                        input.form-check-input(type="checkbox" id="role_student" name="roles" value="STUDENT" checked=roles.includes('STUDENT'))
+                        label.form-check-label(for="role_student") 
+                          i.bi.bi-mortarboard.me-1
+                          | Học viên
+                      .form-check.form-check-inline
+                        input.form-check-input(type="checkbox" id="role_instructor" name="roles" value="INSTRUCTOR" checked=roles.includes('INSTRUCTOR'))
+                        label.form-check-label(for="role_instructor")
+                          i.bi.bi-person-video2.me-1
+                          | Giảng viên
+                      .form-check.form-check-inline
+                        input.form-check-input(type="checkbox" id="role_admin" name="roles" value="ADMIN" checked=roles.includes('ADMIN'))
+                        label.form-check-label(for="role_admin")
+                          i.bi.bi-shield-check.me-1
+                          | Quản trị
+
+            // Right Column - Avatar
+            .col-lg-4
+              .form-section
+                .section-title
+                  i.bi.bi-image
+                  | Ảnh đại diện
+                
+                .avatar-preview
+                  // Current Avatar Display
+                  if userDoc && userDoc.avatarUrl
+                    .mb-3
+                      img.avatar-current.rounded-circle(src=userDoc.avatarUrl alt="Avatar hiện tại" width="100" height="100" style="object-fit: cover;")
+                    .form-check.mb-3
+                      input.form-check-input(type="checkbox" id="remove_avatar" name="removeAvatar" value="1")
+                      label.form-check-label(for="remove_avatar").text-danger
+                        i.bi.bi-trash.me-1
+                        | Xóa ảnh hiện tại
+                  else
+                    .mb-3
+                      .avatar-placeholder.rounded-circle.mx-auto.d-flex.align-items-center.justify-content-center(style="width: 100px; height: 100px;")
+                        i.bi.bi-person.fs-1.text-muted
+                  
+                  // File Upload
+                  .mb-3
+                    input.form-control(type="file" name="avatar" accept="image/*" id="avatar_upload")
+                    .form-text.text-muted.small Chọn ảnh JPG, PNG (tối đa 2MB)
+
+          // Action Buttons
+          .form-actions
+            .d-flex.justify-content-between.align-items-center
+              .text-muted.small
+                i.bi.bi-info-circle.me-1
+                | Các trường có dấu * là bắt buộc
+              
+              .d-flex.gap-2
+                a.btn.btn-outline-secondary(href=`${prefixAdmin}/users`)
+                  i.bi.bi-arrow-left.me-1
+                  | Quay lại
+                button.btn.btn-primary(type="submit")
+                  i.bi.bi-check-lg.me-1
+                  = mode==='create' ? 'Tạo tài khoản' : 'Cập nhật'
+
+    // Additional Notes Card
+    if mode === 'create'
+      .notes-card
+        .d-flex.align-items-start.gap-2
+          i.bi.bi-lightbulb.text-info.mt-1
+          .small
+            strong Lưu ý quan trọng:
+            ul
+              li Mật khẩu mặc định sẽ là "Password@123" nếu để trống
+              li Username sẽ được tạo tự động từ email nếu không nhập
+              li Vai trò "Giảng viên" được chọn mặc định

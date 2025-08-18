@@ -1,0 +1,28 @@
+mixin form-change-multi-user(path)
+  .bulk-actions-wrapper.mb-4
+    .bulk-actions-header.mb-2
+      span.bulk-title
+        i.bi.bi-gear-fill.me-2
+        | Thao tác hàng loạt
+
+    form.bulk-actions-form(action=path method="post" form-change-multi)
+      .bulk-controls.d-flex.align-items-center.gap-3.p-3.bg-light.rounded.border
+        .flex-grow-1
+          select.form-select.bulk-select(name="type" required)
+            option(value="" disabled selected) -- Chọn hành động --
+            optgroup(label="Trạng thái")
+              option(value="status:ACTIVE")   ✅ Mở khoá
+              option(value="status:LOCKED")   🔒 Khoá tài khoản
+            optgroup(label="Quyền")
+              option(value="grant:INSTRUCTOR")   🟢 Gán quyền Instructor
+              option(value="revoke:INSTRUCTOR")  🟠 Thu quyền Instructor
+              option(value="grant:ADMIN")        🔑 Gán quyền Admin
+              option(value="revoke:ADMIN")       🧹 Thu quyền Admin
+            optgroup(label="Khác")
+              option(value="delete") 🗑️ Xoá mềm
+
+        input(type="hidden" name="inputIds" value="")
+
+        button.btn.btn-primary.bulk-submit(type="submit")
+          i.bi.bi-check2-circle.me-1
+          | Áp dụng

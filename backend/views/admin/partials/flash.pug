@@ -1,0 +1,11 @@
+mixin flashBlock(list, cls)
+  if list && list.length
+    each m in list
+      .alert.alert-dismissible.fade.show(role="alert" class=cls data-autohide="true")
+        = m
+        button.btn-close(type="button" data-bs-dismiss="alert" aria-label="Close")
+
++flashBlock(flash && flash.error, 'alert-danger')
++flashBlock(flash && flash.warning, 'alert-warning')
++flashBlock(flash && flash.info, 'alert-info')
++flashBlock(flash && flash.success, 'alert-success')
