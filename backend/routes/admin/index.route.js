@@ -7,5 +7,6 @@ module.exports = (app)=>{
     
     app.use(`${PATH_ADMIN}/courses`, courseRoutes);
     app.use(`${PATH_ADMIN}/users`, userRoutes);
+
 }
 

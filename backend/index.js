@@ -8,6 +8,7 @@ const path = require("path");
 const database = require('./config/database');
 const systemConfig = require('./config/system');
 const flash = require("express-flash");
+
 database.connect();
 
 const app = express();
@@ -47,6 +48,9 @@ app.use((req, res, next) => {
     next();
 });
 // end flash
+app.use(cookieParser());
+app.use(methodOverride('_method'));
+app.use('/public', express.static(path.join(__dirname, 'public')));
 
 // App Local Variables 
 app.locals.prefixAdmin = systemConfig.prefixAdmin;
