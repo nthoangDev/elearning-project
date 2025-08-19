@@ -27,6 +27,17 @@
 }
 
 /* Action Bar */
+.btn-action.btn-success {
+  color: #1e7e34;
+  border-color: #28a745;
+  background: rgba(40, 167, 69, 0.06);
+}
+.btn-action.btn-success:hover {
+  color: #fff;
+  background: #28a745;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 10px rgba(40, 167, 69, 0.25);
+}
 .action-bar {
     background: #fff;
     padding: 1.25rem;

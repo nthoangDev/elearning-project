@@ -1,0 +1,73 @@
+extends ../../layouts/default
+
+block main
+    h3= mode==='create' ? 'Thêm bài học' : 'Sửa bài học'
+
+    form(method="post" enctype="multipart/form-data" action=( mode==='create'
+        ? `${prefixAdmin}/courses/${courseId}/lessons`
+        : `${prefixAdmin}/lessons/${lesson._id}?_method=PUT`)
+    )
+        .row
+        .col-md-8
+            .mb-3
+            label.form-label Tiêu đề
+            input.form-control(type="text" name="title" required value=lesson.title || '')
+
+            .mb-3
+            label.form-label Loại bài
+            select.form-select(name="type")
+                - const types = ['VIDEO','DOCUMENT','QUIZ']
+                each t in types
+                option(value=t selected=(lesson.type===t))= t
+
+            .mb-3
+            label.form-label Mô tả / ghi chú
+            textarea.form-control(name="contentText" rows="4")= lesson.contentText || ''
+
+            .mb-3
+            label.form-label Tài nguyên (mỗi dòng 1 URL: MP4/PDF/Ảnh/YouTube…)
+            textarea.form-control(name="resourceUrls" rows="5")= (lesson.resources && lesson.resources.length ? lesson.resources.map(r => r.url).join('\n') : '')
+            small.text-muted Ví dụ:
+                |  https://youtu.be/abc...
+                br
+                |  https://cdn.site.com/files/intro.pdf
+
+            //- Bật khi bạn gắn uploadLessonFiles ở router:
+            // .mb-3
+            //   label.form-label Hoặc tải nhiều tệp
+            //   input.form-control(type="file" name="files" accept="application/*,video/*,image/*,audio/*" multiple)
+
+            .row
+            .col-md-6
+                .mb-3
+                label.form-label Thời lượng tổng (giây)
+                input.form-control(type="number" min="0" name="durationSec" value=lesson.durationSec || '')
+            .col-md-6
+                .mb-3
+                label.form-label Cho phép học thử (Preview)
+                select.form-select(name="isFreePreview")
+                    option(value="0" selected=!lesson.isFreePreview) Không
+                    option(value="1" selected=lesson.isFreePreview) Có
+
+        .col-md-4
+            .mb-3
+            label.form-label Thuộc chương
+            if sections && sections.length
+                select.form-select(name="section" required)
+                each s in sections
+                    option(value=s._id selected=(String(lesson.section||'')===String(s._id)))= s.title
+            else
+                .text-muted Chưa có chương — hãy tạo trước
+
+            if lesson.resources && lesson.resources.length
+            .mb-3
+                label.form-label Tài nguyên hiện có
+                ul.list-group
+                each r in lesson.resources
+                    li.list-group-item
+                    span.badge.text-bg-secondary.me-2= r.kind
+                    a(href=r.url target="_blank")= r.title || r.url
+
+        .d-flex.gap-2
+        button.btn.btn-primary(type="submit") Lưu
+        a.btn.btn-light(href=`${prefixAdmin}/courses/${courseId || lesson.course}/content`) Hủy

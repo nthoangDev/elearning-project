@@ -1,0 +1,50 @@
+extends ../../layouts/default
+
+block main
+  h3 NỘI DUNG KHÓA HỌC: #{course.title}
+
+  .mb-3
+    a.btn.btn-primary(href=`${prefixAdmin}/courses/${course._id}/sections/create`) + Thêm chương
+    a.btn.btn-success.ms-2(href=`${prefixAdmin}/courses/${course._id}/lessons/create`) + Thêm bài học
+
+  if sections.length
+    each s in sections
+      .card.mb-3
+        .card-header.d-flex.justify-content-between.align-items-center
+          strong #{s.title}
+          .btn-group
+            form.d-inline(method="post" action=`${prefixAdmin}/sections/${s._id}/move?_method=PATCH`)
+              input(type="hidden" name="dir" value="up")
+              button.btn.btn-sm.btn-outline-secondary(type="submit") ↑
+            form.d-inline(method="post" action=`${prefixAdmin}/sections/${s._id}/move?_method=PATCH`)
+              input(type="hidden" name="dir" value="down")
+              button.btn.btn-sm.btn-outline-secondary(type="submit") ↓
+            a.btn.btn-sm.btn-outline-primary(href=`${prefixAdmin}/sections/${s._id}/edit`) Sửa
+            form.d-inline(method="post" action=`${prefixAdmin}/sections/${s._id}?_method=DELETE` onsubmit="return confirm('Xoá chương này? Tất cả bài học trong chương cũng bị xoá.');")
+              button.btn.btn-sm.btn-outline-danger(type="submit") Xoá
+
+        .card-body
+          - const items = lessonsBySection[String(s._id)] || []
+          if !items.length
+            p.text-muted (Chưa có bài học)
+          else
+            ul.list-group
+              each ls in items
+                li.list-group-item.d-flex.justify-content-between.align-items-center
+                  span
+                    strong #{ls.title}
+                    small.text-muted.ms-2 #{ls.type}
+                    if ls.isFreePreview
+                      span.badge.text-bg-success.ms-2 Preview
+                  .btn-group
+                    form.d-inline(method="post" action=`${prefixAdmin}/lessons/${ls._id}/move?_method=PATCH`)
+                      input(type="hidden" name="dir" value="up")
+                      button.btn.btn-sm.btn-outline-secondary(type="submit") ↑
+                    form.d-inline(method="post" action=`${prefixAdmin}/lessons/${ls._id}/move?_method=PATCH`)
+                      input(type="hidden" name="dir" value="down")
+                      button.btn.btn-sm.btn-outline-secondary(type="submit") ↓
+                    a.btn.btn-sm.btn-outline-primary(href=`${prefixAdmin}/lessons/${ls._id}/edit`) Sửa
+                    form.d-inline(method="post" action=`${prefixAdmin}/lessons/${ls._id}?_method=DELETE` onsubmit="return confirm('Xoá bài học này?');")
+                      button.btn.btn-sm.btn-outline-danger(type="submit") Xoá
+  else
+    p.text-muted Chưa có chương nào

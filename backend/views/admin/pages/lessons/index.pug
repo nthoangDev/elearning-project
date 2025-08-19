@@ -1,0 +1,215 @@
+extends ../../layouts/default
+include ../../mixins/search.pug
+
+block head
+  link(rel="stylesheet", href="/public/admin/css/lesson-content.css")
+
+block main
+  //- Page Header
+  .page-header
+    .d-flex.flex-wrap.justify-content-between.align-items-center.gap-2
+      h3.page-title= pageTitle || 'Nội dung khóa học'
+      .d-flex.gap-2
+        if filterSection
+          a.btn.btn-outline-secondary(href=`${prefixAdmin}/courses/${courseId}/lessons`)
+            i.bi.bi-x-circle
+            |  Xóa lọc
+        // Nút mở form tạo Section
+        a.btn.btn-outline-primary(
+          data-bs-toggle="collapse"
+          href="#createSectionForm"
+          role="button"
+          aria-expanded="false"
+          aria-controls="createSectionForm"
+        )
+          i.bi.bi-plus-circle
+          |  Thêm chương
+
+  //- Quick Create Section (collapse)
+  .collapse#createSectionForm
+    .card.mb-3
+      .card-body
+        form(action=`${prefixAdmin}/courses/${courseId}/sections`, method="post" class="row g-3 align-items-end")
+          input(type='hidden', name='course', value=String(courseId))
+          .col-md-4
+            label.form-label(for="sec-title") Tiêu đề chương
+            input#sec-title.form-control(type="text" name="title" required placeholder="VD: Giới thiệu")
+          .col-md-6
+            label.form-label(for="sec-summary") Mô tả ngắn
+            input#sec-summary.form-control(type="text" name="summary" placeholder="Tùy chọn")
+          .col-md-2
+            button.btn.btn-primary.w-100(type="submit")
+              i.bi.bi-plus-circle
+              |  Tạo chương
+
+  //- Summary
+  .filter-bar
+    .text-muted
+      | Tổng: 
+      b= totalSections
+      |  chương, 
+      b= totalLessons
+      |  bài học.
+
+  //- Empty state
+  if !sections || sections.length === 0
+    .table-container
+      .table-responsive
+        table.table.table-hover.align-middle
+          tbody
+            tr
+              td(colspan="1").empty-state
+                i.bi.bi-journal-x
+                div Chưa có chương nào cho khóa học này
+  else
+    //- Accordion Sections
+    - var openId = String(filterSection || '')
+    .accordion#sectionsAccordion
+      each s, si in sections
+        - var sid = `sec-${s._id}`
+        - var eid = `edit-sec-${s._id}`
+        - var isOpen = (String(s._id) === openId) || (!openId && si === 0)
+
+        .accordion-item.mb-3
+          h2.accordion-header
+            .d-flex.w-100.align-items-stretch
+                button.accordion-button.flex-grow-1(
+                    class=isOpen ? '' : 'collapsed',
+                    type="button",
+                    data-bs-toggle="collapse",
+                    data-bs-target=`#${sid}`,
+                    aria-expanded=isOpen ? 'true' : 'false',
+                    aria-controls=sid
+                )
+                    .d-flex.w-100.justify-content-between.align-items-center
+                        span
+                            span.badge.bg-light.text-dark.me-2 #{s.sortOrder || si + 1}
+                            span.fw-semibold= s.title || s.name || `Section ${s.sortOrder || ''}`
+                            if s.summary
+                            small.text-muted.ms-2= s.summary
+                        span.badge.bg-secondary #{(s.lessons && s.lessons.length) ? s.lessons.length : 0} bài
+
+                //- Section action buttons (move/edit/delete)
+                .section-actions.d-flex.align-items-center.px-2.gap-1
+                    // Lên
+                    form(action=`${prefixAdmin}/courses/${courseId}/sections/${s._id}/move?_method=PATCH` method="post")
+                        input(type="hidden" name="dir" value="up")
+                        button.btn.btn-sm.btn-light(type="submit" title="Chuyển lên")
+                            i.bi.bi-arrow-up
+                    // Xuống
+                    form(action=`${prefixAdmin}/courses/${courseId}/sections/${s._id}/move?_method=PATCH` method="post")
+                        input(type="hidden" name="dir" value="down")
+                        button.btn.btn-sm.btn-light(type="submit" title="Chuyển xuống")
+                            i.bi.bi-arrow-down
+                    // Sửa (toggle form)
+                    button.btn.btn-sm.btn-outline-secondary(
+                        type="button"
+                        data-bs-toggle="collapse"
+                        data-bs-target=`#${eid}`
+                        aria-expanded="false"
+                        aria-controls=eid
+                        title="Sửa chương"
+                    )
+                        i.bi.bi-pencil-square
+                    // Xóa
+                    form(action=`${prefixAdmin}/courses/${courseId}/sections/${s._id}?_method=DELETE` method="post" onsubmit="return confirm('Xóa chương này và toàn bộ bài học thuộc chương?');")
+                        button.btn.btn-sm.btn-outline-danger(type="submit" title="Xóa chương")
+                            i.bi.bi-trash
+
+
+          //- Inline Edit Section (collapse)
+          .collapse.border-top(id='edit-sec-' + String(s._id))
+            .p-3.bg-light
+              form(action=`${prefixAdmin}/courses/${courseId}/sections/${s._id}?_method=PUT` method="post" class="row g-2 align-items-end")
+                input(type='hidden', name='course', value=String(courseId))
+                .col-md-4
+                  label.form-label(for=`title-${s._id}`) Tiêu đề
+                  input.form-control(type="text" id=`title-${s._id}` name="title" required value=s.title)
+                .col-md-6
+                  label.form-label(for=`summary-${s._id}`) Mô tả ngắn
+                  input.form-control(type="text" id=`summary-${s._id}` name="summary" value=s.summary)
+                .col-md-2
+                  button.btn.btn-success.w-100(type="submit")
+                    i.bi.bi-check2
+                    |  Lưu
+
+          .accordion-collapse.collapse(id=sid class=isOpen ? 'show' : '' data-bs-parent="#sectionsAccordion")
+            .accordion-body.p-0
+              if !s.lessons || s.lessons.length === 0
+                .p-3.text-muted.d-flex.justify-content-between.align-items-center
+                  span Chưa có bài học trong chương này.
+              else
+                .table-container
+                  .table-responsive
+                    table.table.table-hover.align-middle.mb-0
+                      thead
+                        tr
+                          th(style="width:64px") #
+                          th Tiêu đề
+                          th(style="width:12%") Kiểu
+                          th(style="width:12%") Thời lượng
+                          th(style="width:10%") Xem trước?
+                          th(style="width:22%") Tài nguyên chính
+                          th(style="width:220px") Hành động
+                      tbody
+                        each l, idx in s.lessons
+                          tr
+                            td= l.sortOrder || (idx + 1)
+                            td
+                              .fw-semibold= l.title
+                            td= l.type
+                            td= l.durationSec ? Math.round(l.durationSec / 60) + ' phút' : '—'
+                            td
+                              if l.isFreePreview
+                                span.badge.bg-success Có
+                              else
+                                span.badge.bg-light.text-muted Không
+                            td
+                              - var prim = (l.resources && l.resources.length) ? (l.resources.find(r => r.isPrimary) || l.resources[0]) : null
+                              if prim
+                                .d-flex.flex-column
+                                  small.text-muted.mb-1= prim.kind || 'Tài nguyên'
+                                  a(href=prim.url target="_blank" rel="noopener") Mở tài nguyên →
+                              else
+                                | —
+                            td
+                              .action-buttons
+                                a.btn-action.btn-edit(
+                                  href=`${prefixAdmin}/lessons/${l._id}/edit`, 
+                                  title="Chỉnh sửa bài học"
+                                )
+                                  i.bi.bi-pencil-square
+                                  span Sửa
+                                form(action=`${prefixAdmin}/lessons/${l._id}?_method=DELETE` method="post" onsubmit="return confirm('Xóa bài học này?');" style="display:inline-block")
+                                  button.btn-action.btn-delete(type="submit" title="Xóa bài học")
+                                    i.bi.bi-trash
+                                    span Xóa
+                                form(action=`${prefixAdmin}/lessons/${l._id}/move?_method=PATCH` method="post" style="display:inline-block")
+                                  input(type="hidden" name="dir" value="up")
+                                  button.btn-action(type="submit" title="Chuyển lên")
+                                    i.bi.bi-arrow-up
+                                    span Lên
+                                form(action=`${prefixAdmin}/lessons/${l._id}/move?_method=PATCH` method="post" style="display:inline-block")
+                                  input(type="hidden" name="dir" value="down")
+                                  button.btn-action(type="submit" title="Chuyển xuống")
+                                    i.bi.bi-arrow-down
+                                    span Xuống
+            .p-3.border-top.d-flex.justify-content-end
+              a.btn.btn-sm.btn-primary(href=`${prefixAdmin}/courses/${courseId}/lessons/create?section=${s._id}`)
+                i.bi.bi-plus-circle
+                |  Thêm bài học
+
+block scripts
+  // Mở đúng accordion nếu có ?section=<id>
+  script.
+    (function(){
+      const url = new URL(window.location.href);
+      const sec = url.searchParams.get('section');
+      if(!sec) return;
+      const pane = document.getElementById('sec-' + sec);
+      if(pane && !pane.classList.contains('show')) {
+        pane.classList.add('show');
+        const btn = document.querySelector(`[data-bs-target="#sec-${sec}"]`);
+        if(btn) btn.classList.remove('collapsed');
+      }
+    })();

@@ -1,0 +1,18 @@
+const express = require('express');
+const router = express.Router({ mergeParams: true });
+const controller = require('../../controller/admin/lesson.controller');
+
+const { uploadLessonFiles } = require('../../middlewares/upload');
+
+router.get('/', controller.list);
+
+router.get('/create', controller.showCreate);
+router.post('/', uploadLessonFiles,  controller.create);
+
+router.get('/:id/edit', controller.showEdit);
+router.post('/:id',  uploadLessonFiles,  controller.update);
+
+router.post('/:id', controller.remove);
+router.post('/:id/move', controller.move);
+
+module.exports = router;

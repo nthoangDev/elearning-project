@@ -31,12 +31,12 @@ block main
                         th(style="width:44px;")
                             input.form-check-input#checkAll(type="checkbox", aria-label="Chọn tất cả")
                         th(style="width:80px;") Ảnh
-                        th Tiêu đề
-                        th(style="width:16%") Chủ đề
+                        th(style="width:15%") Tiêu đề
+                        th(style="width:12%") Chủ đề
                         th(style="width:12%") Giá
                         th(style="width:16%") Trạng thái
-                        th(style="width:20%") Giảng viên
-                        th(style="width:140px") Hành động
+                        th(style="width:15%") Giảng viên
+                        th(style="width:260px") Hành động
                 tbody
                     if !courses || courses.length === 0
                         tr
@@ -96,6 +96,12 @@ block main
                                         = names || '—'
                                 td
                                     .action-buttons
+                                        a.btn-action.btn-lessons.btn-success(
+                                            href=`${prefixAdmin}/courses/${c._id}/lessons`,
+                                            title="Xem bài học của khóa"
+                                            )
+                                            i.bi.bi-journal-check
+                                            span Bài học
                                         a.btn-action.btn-edit(
                                             href=`${prefixAdmin}/courses/${c._id}/edit`, 
                                             title="Chỉnh sửa khóa học"
