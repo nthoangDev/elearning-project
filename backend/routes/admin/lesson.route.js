@@ -10,9 +10,9 @@ router.get('/create', controller.showCreate);
 router.post('/', uploadLessonFiles,  controller.create);
 
 router.get('/:id/edit', controller.showEdit);
-router.post('/:id',  uploadLessonFiles,  controller.update);
+router.put('/:id',  uploadLessonFiles,  controller.update);
 
-router.post('/:id', controller.remove);
-router.post('/:id/move', controller.move);
+router.delete('/:id', controller.remove);
+router.patch('/:id/move', controller.move);
 
 module.exports = router;

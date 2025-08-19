@@ -23,7 +23,7 @@ const LessonSchema = new Schema({
   sortOrder:    { type: Number, default: 1 },
   isFreePreview:{ type: Boolean, default: false },
 
-  resources:    [ResourceSub],    
+  resources: { type: [ResourceSub], default: [] },   
   assessments:  [{ type: Types.ObjectId, ref: 'Assessment' }] 
 }, {
   timestamps: true,

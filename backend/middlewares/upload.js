@@ -1,9 +1,7 @@
-// middlewares/upload.js
 const path = require('path');
 const fs = require('fs');
 const multer = require('multer');
 
-// Tạo tên file an toàn
 function safeFilename(_req, file, cb) {
   const ext = path.extname(file.originalname).toLowerCase();
   const base = path.basename(file.originalname, ext)
@@ -13,7 +11,6 @@ function safeFilename(_req, file, cb) {
   cb(null, `${Date.now()}-${base}${ext}`);
 }
 
-// Filter chỉ ảnh
 function imageOnlyFilter(req, file, cb) {
   const ok = /^image\/(png|jpe?g|webp|gif)$/i.test(file.mimetype);
   if (!ok) {
@@ -23,13 +20,11 @@ function imageOnlyFilter(req, file, cb) {
   cb(null, true);
 }
 
-// Filter nhận đa số định dạng phổ biến (pdf/doc/mp4/mp3/ảnh…)
 function anyCommonFileFilter(_req, file, cb) {
   const ok = /^(image|video|audio|application|text)\//i.test(file.mimetype);
   cb(null, ok);
 }
 
-// Tạo storage theo thư mục con trong /tmp/uploads
 function makeStorage(subdir) {
   return multer.diskStorage({
     destination(req, _file, cb) {
@@ -57,13 +52,9 @@ function makeDiskUploader({
     limits: { fileSize: maxSizeMB * 1024 * 1024 }
   });
 
-  // Trả về middleware phù hợp
   return multiple ? m.array(field, maxCount) : m.single(field);
 }
 
-/* ================== Uploader tiện dụng (dễ gọi lại) ================== */
-
-// 1) Ảnh khoá học: field = 'image', single, chỉ ảnh, 2MB
 const uploadCourseImage = makeDiskUploader({
   subdir: 'courses',
   field: 'image',
@@ -72,7 +63,6 @@ const uploadCourseImage = makeDiskUploader({
   multiple: false
 });
 
-// 2) Ảnh avatar: field = 'avatar', single, chỉ ảnh, 2MB
 const uploadAvatarImage = makeDiskUploader({
   subdir: 'users',
   field: 'avatar',
@@ -81,7 +71,6 @@ const uploadAvatarImage = makeDiskUploader({
   multiple: false
 });
 
-// 3) Tài nguyên bài học (nhiều loại file): field = 'files', multiple, 50MB/file
 const uploadLessonFiles = makeDiskUploader({
   subdir: 'lessons',
   field: 'files',
@@ -91,7 +80,6 @@ const uploadLessonFiles = makeDiskUploader({
   maxCount: 10
 });
 
-// 4) Nếu cần ảnh bài học (gallery) – multiple ảnh
 const uploadLessonImages = makeDiskUploader({
   subdir: 'lessons/images',
   field: 'images',
