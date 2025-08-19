@@ -15,7 +15,6 @@ const STATUSES = [
     { value: 'ARCHIVED', label: 'Đã lưu trữ' }
 ];
 
-
 // GET /admin/courses
 module.exports.list = async (req, res) => {
 
