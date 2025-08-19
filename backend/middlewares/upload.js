@@ -40,8 +40,6 @@ function makeStorage(subdir) {
   });
 }
 
-
-<<<<<<< HEAD
 function makeDiskUploader({
   subdir,
   field = 'file',
@@ -110,6 +108,3 @@ module.exports = {
   uploadLessonFiles,
   uploadLessonImages
 };
-=======
-module.exports = { makeDiskUploader, uploadCourseImage, uploadAvatarImage };
->>>>>>> 1c7bf79ae1f9284f34628fc0e34358ffaaa7256d

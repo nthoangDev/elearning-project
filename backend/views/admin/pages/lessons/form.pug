@@ -18,7 +18,7 @@ block main
             select.form-select(name="type")
                 - const types = ['VIDEO','DOCUMENT','QUIZ']
                 each t in types
-                option(value=t selected=(lesson.type===t))= t
+                    option(value=t selected=(lesson.type===t))= t
 
             .mb-3
             label.form-label Mô tả / ghi chú
@@ -63,10 +63,10 @@ block main
             .mb-3
                 label.form-label Tài nguyên hiện có
                 ul.list-group
-                each r in lesson.resources
-                    li.list-group-item
-                    span.badge.text-bg-secondary.me-2= r.kind
-                    a(href=r.url target="_blank")= r.title || r.url
+                    each r in lesson.resources
+                        li.list-group-item
+                        span.badge.text-bg-secondary.me-2= r.kind
+                        a(href=r.url target="_blank")= r.title || r.url
 
         .d-flex.gap-2
         button.btn.btn-primary(type="submit") Lưu

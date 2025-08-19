@@ -71,7 +71,7 @@ module.exports.list = async (req, res) => {
   }
 };
 
-// [GET] /admin/courses/:courseId/lessons/create?section=<id>
+// [GET] /admin/courses/:courseId/lessons/create
 module.exports.showCreate = async (req, res) => {
   const { courseId } = req.params;
   const sections = await Section.find({ course: courseId }).sort({ sortOrder: 1 }).lean();
