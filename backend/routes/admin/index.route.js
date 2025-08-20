@@ -5,6 +5,8 @@ const userRoutes = require("./user.route");
 const sectionRoute = require('./section.route');
 const lessonRoute = require('./lesson.route');
 
+
+
 module.exports = (app) => {
     const PATH_ADMIN = systemConfig.prefixAdmin;
 
@@ -13,6 +15,5 @@ module.exports = (app) => {
     app.use(`${PATH_ADMIN}/users`, userRoutes);
     app.use(`${PATH_ADMIN}/courses/:courseId/sections`, sectionRoute);
     app.use(`${PATH_ADMIN}/courses/:courseId/lessons`, lessonRoute);
-
 }
 
