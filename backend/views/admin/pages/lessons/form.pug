@@ -1,0 +1,253 @@
+extends ../../layouts/default
+
+block head
+  link(rel="stylesheet", href="/public/admin/css/lesson-form.css")
+
+block main
+  .lesson-form-page
+    //- Page Header
+    .page-header
+      .header-content
+        .header-left
+          .breadcrumb-nav
+            a.breadcrumb-item(href=`${prefixAdmin}/courses/${courseId}/lessons`)
+              i.bi.bi-arrow-left
+              span Quay lại danh sách
+          h3.page-title
+            i.bi.bi-play-circle.me-2
+            span= mode === 'create' ? 'Thêm bài học mới' : 'Chỉnh sửa bài học'
+        
+        .header-actions
+          .form-status
+            if sections && sections.length
+              .status-badge.status-ready
+                i.bi.bi-check-circle
+                span Sẵn sàng tạo bài học
+            else
+              .status-badge.status-warning
+                i.bi.bi-exclamation-triangle
+                span Chưa có chương nào
+
+    //- Main Form
+    .form-container
+      form.lesson-form(
+        method="post" 
+        enctype="multipart/form-data" 
+        action=(mode === 'create'
+          ? `${prefixAdmin}/courses/${courseId}/lessons`
+          : `${prefixAdmin}/courses/${courseId}/lessons/${lesson._id}?_method=PUT`)
+      )
+        - const resources = (lesson && Array.isArray(lesson.resources)) ? lesson.resources : []
+        
+        .form-layout
+          //- Main Content Column
+          .main-column
+            //- Basic Information Card
+            .form-card
+              .card-header
+                h5.card-title
+                  i.bi.bi-info-circle
+                  span Thông tin cơ bản
+              .card-body
+                .form-group
+                  label.form-label(for="title")
+                    span Tiêu đề bài học
+                    span.required *
+                  input#title.form-control(
+                    type="text" 
+                    name="title" 
+                    required 
+                    value=lesson.title || ''
+                    placeholder="Nhập tiêu đề bài học"
+                  )
+
+                .form-row
+                  .form-group
+                    label.form-label(for="type")
+                      span Loại bài học
+                      span.required *
+                    select#type.form-select(name="type")
+                      - const types = ['VIDEO', 'DOCUMENT', 'QUIZ']
+                      each t in types
+                        option(
+                          value=t 
+                          selected=(lesson.type ? lesson.type === t : t === 'VIDEO')
+                        )= t
+                  
+                  .form-group
+                    label.form-label(for="section")
+                      span Thuộc chương
+                      span.required *
+                    if sections && sections.length
+                      select#section.form-select(name="section" required)
+                        each s in sections
+                          option(
+                            value=s._id 
+                            selected=(String(lesson.section || '') === String(s._id))
+                          )= s.title
+                    else
+                      .form-control.disabled-state
+                        span.text-muted Chưa có chương — hãy tạo trước
+
+                .form-group
+                  label.form-label(for="contentText") Mô tả / Ghi chú
+                  textarea#contentText.form-control(
+                    name="contentText" 
+                    rows="4"
+                    placeholder="Mô tả nội dung, ghi chú cho bài học này..."
+                  )= lesson.contentText || ''
+
+            //- Resources Card
+            .form-card
+              .card-header
+                h5.card-title
+                  i.bi.bi-folder
+                  span Tài nguyên bài học
+              .card-body
+                .form-group
+                  label.form-label(for="resourceUrls") URL tài nguyên
+                  textarea#resourceUrls.form-control(
+                    name="resourceUrls" 
+                    rows="4"
+                    placeholder="Mỗi dòng một URL..."
+                  )= (resources.length ? resources.map(r => r.url).join('\n') : '')
+                  .form-help
+                    .help-title Ví dụ URL hỗ trợ:
+                    .help-examples
+                      .help-item
+                        i.bi.bi-play-btn
+                        span https://youtu.be/abc123
+                      .help-item
+                        i.bi.bi-file-earmark-pdf
+                        span https://cdn.site.com/files/intro.pdf
+                      .help-item
+                        i.bi.bi-image
+                        span https://images.example.com/diagram.png
+
+                .form-divider
+                  span hoặc
+
+                .form-group
+                  label.form-label(for="files") Tải lên tệp từ máy tính
+                  .file-upload-area
+                    input#files.form-control(
+                      type="file" 
+                      name="files" 
+                      multiple
+                      accept="video/*,application/pdf,image/*,audio/*,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain,text/csv,text/markdown"
+                    )
+                    .upload-hint
+                      i.bi.bi-cloud-upload
+                      span Chọn nhiều tệp (tối đa 50MB mỗi tệp)
+                      .file-types Video, PDF, Ảnh, Audio, Word, Text...
+
+            //- Settings Card
+            .form-card
+              .card-header
+                h5.card-title
+                  i.bi.bi-gear
+                  span Cài đặt bài học
+              .card-body
+                .form-row
+                  .form-group
+                    label.form-label(for="durationSec") Thời lượng (giây)
+                    input#durationSec.form-control(
+                      type="number" 
+                      min="0" 
+                      name="durationSec" 
+                      value=(typeof lesson.durationSec === 'number' ? lesson.durationSec : '')
+                      placeholder="0"
+                    )
+                    small.form-text Ví dụ: 300 = 5 phút
+
+                  .form-group
+                    label.form-label(for="isFreePreview") Cho phép học thử
+                    - const free = !!lesson.isFreePreview
+                    select#isFreePreview.form-select(name="isFreePreview")
+                      option(value="0" selected=!free) Không cho phép
+                      option(value="1" selected=free) Cho phép xem trước
+
+          //- Sidebar Column
+          .sidebar-column
+            //- Current Resources Card (if exists)
+            if resources.length
+              .form-card.resources-card
+                .card-header
+                  h5.card-title
+                    i.bi.bi-files
+                    span Tài nguyên hiện có
+                    .resource-count= resources.length
+                .card-body
+                  .resource-list
+                    each r in resources
+                      .resource-item
+                        .resource-icon
+                          if r.kind === 'VIDEO'
+                            i.bi.bi-play-circle.text-primary
+                          else if r.kind === 'PDF' || r.kind === 'DOCUMENT'
+                            i.bi.bi-file-earmark-pdf.text-danger
+                          else if r.kind === 'IMAGE'
+                            i.bi.bi-image.text-success
+                          else if r.kind === 'AUDIO'
+                            i.bi.bi-music-note.text-warning
+                          else
+                            i.bi.bi-file-earmark.text-muted
+                        
+                        .resource-content
+                          .resource-title= r.title || 'Untitled'
+                          .resource-details
+                            .resource-type= r.kind || 'OTHER'
+                            if r.mime
+                              .resource-mime= r.mime
+                          if r.url
+                            a.resource-link(href=r.url target="_blank" rel="noopener")
+                              i.bi.bi-box-arrow-up-right
+                              span Xem tài nguyên
+
+            //- Help Card
+            .form-card.help-card
+              .card-header
+                h5.card-title
+                  i.bi.bi-question-circle
+                  span Hướng dẫn
+              .card-body
+                .help-content
+                  .help-section
+                    h6 Loại bài học
+                    ul.help-list
+                      li
+                        strong VIDEO: 
+                        span Bài học dạng video
+                      li
+                        strong DOCUMENT: 
+                        span Tài liệu, PDF, hình ảnh
+                      li
+                        strong QUIZ: 
+                        span Bài kiểm tra, câu hỏi
+
+                  .help-section
+                    h6 Tài nguyên
+                    ul.help-list
+                      li Có thể thêm URL hoặc tải tệp từ máy
+                      li Hỗ trợ video, PDF, hình ảnh, audio
+                      li Mỗi tệp tối đa 50MB
+
+        //- Form Actions
+        .form-actions
+          .actions-container
+            .action-buttons
+              button.btn.btn-primary(
+                type="submit" 
+                disabled=!(sections && sections.length)
+              )
+                i.bi.bi-check-circle
+                span= mode === 'create' ? 'Tạo bài học' : 'Cập nhật'
+              
+              a.btn.btn-secondary(href=`${prefixAdmin}/courses/${courseId}/lessons`)
+                i.bi.bi-x-circle
+                span Hủy bỏ
+            
+            if !(sections && sections.length)
+              .form-warning
+                i.bi.bi-exclamation-triangle
+                span Vui lòng tạo chương trước khi thêm bài học
