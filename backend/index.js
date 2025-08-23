@@ -1,5 +1,6 @@
 require('dotenv').config();
 const routeAdmin = require('./routes/admin/index.route');
+const routeClient = require('./routes/client/index.route')
 const express = require('express');
 const cookieParser = require('cookie-parser');
 const session = require("express-session");
@@ -57,5 +58,6 @@ app.locals.prefixAdmin = systemConfig.prefixAdmin;
 
 // Routes
 routeAdmin(app);
+routeClient(app);
 
 app.listen(port, () => console.log(`Server http://localhost:${port}`));

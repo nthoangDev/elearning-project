@@ -1,5 +1,5 @@
 const bcrypt = require('bcryptjs');
-const User = require('../../models/user.models');
+const User = require('../../models/user.model');
 const cloudinary = require('../../config/cloudinary');
 const fs = require('fs');
 try { Enrollment = require('../../models/enrollment.model'); } catch { }

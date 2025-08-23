@@ -1,6 +1,6 @@
 const Course = require('../../models/course.model');
 const Topic = require('../../models/topic.model');
-const User = require('../../models/user.models');
+const User = require('../../models/user.model');
 const fs = require('fs');
 const cloudinary = require('../../config/cloudinary');
 
