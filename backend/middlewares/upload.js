@@ -89,10 +89,20 @@ const uploadLessonImages = makeDiskUploader({
   maxCount: 10
 });
 
+const uploadAssessmentFiles = makeDiskUploader({
+  subdir: 'assessments',
+  field: 'files', 
+  accept: 'any',
+  maxSizeMB: 50,
+  multiple: true,
+  maxCount: 10
+});
+
 module.exports = {
   makeDiskUploader,
   uploadCourseImage,
   uploadAvatarImage,
   uploadLessonFiles,
-  uploadLessonImages
+  uploadLessonImages,
+  uploadAssessmentFiles
 };

@@ -2,8 +2,6 @@ const bcrypt = require('bcryptjs');
 const User = require('../../models/user.model');
 const cloudinary = require('../../config/cloudinary');
 const fs = require('fs');
-try { Enrollment = require('../../models/enrollment.model'); } catch { }
-try { Order = require('../../models/order.model'); } catch { }
 
 const searchHelper = require('../../helpers/search');
 const pagination = require('../../helpers/pagination');

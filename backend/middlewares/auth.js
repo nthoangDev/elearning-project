@@ -20,7 +20,7 @@ function requireAuth(roles = []) {
 
       const payload = verifyAccessToken(token);
       const user = await User.findById(payload.sub)
-        .select('email roles fullName status');
+        .select('email roles fullName status avatarUrl');
 
       if (!user || user.status !== 'ACTIVE') {
         return res.status(401).json({ message: 'Unauthorized' });

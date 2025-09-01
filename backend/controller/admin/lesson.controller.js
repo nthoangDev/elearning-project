@@ -128,7 +128,7 @@ module.exports.create = async (req, res) => {
       return res.redirect(`${prefix}/courses/${rawCourseId}/lessons/create`);
     }
     if (req.files?.length) {
-      const folder = `lessons/${rawCourseId}`;
+      const folder = `elearning/lessons/${rawCourseId}`;
       for (const [i, f] of req.files.entries()) {
         try {
           const r = await makeResourceFromFile(f, folder); // trả url Cloudinary

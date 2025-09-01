@@ -6,7 +6,7 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 
 const accessSecret  = process.env.JWT_ACCESS_SECRET;
 const refreshSecret = process.env.JWT_REFRESH_SECRET;
-const accessExp     = process.env.JWT_ACCESS_EXPIRES  || '15m';
+const accessExp     = process.env.JWT_ACCESS_EXPIRES  || '3h';
 const refreshExp    = process.env.JWT_REFRESH_EXPIRES || '7d';
 
 function parseExpMs(exp) {

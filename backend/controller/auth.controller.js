@@ -1,6 +1,8 @@
 const bcrypt = require('bcryptjs');
 const User = require('../models/user.model');
 const RefreshToken = require('../models/refresh-token.model');
+const cloudinary = require('../config/cloudinary');
+const fs = require('fs');
 
 const {
   signAccessToken,
@@ -25,7 +27,6 @@ function setRefreshCookie(res, token) {
   });
 }
 
-// (tuỳ chọn) set cookie access cho Admin (Pug)
 function setAdminCookie(res, accessToken) {
   res.cookie('admin_token', accessToken, {
     httpOnly: true,
@@ -39,7 +40,7 @@ function setAdminCookie(res, accessToken) {
 // POST /auth/register
 exports.register = async (req, res) => {
   try {
-    const { email, password, fullName } = req.body;
+    const { username, email, password, fullName } = req.body;
     const emailNorm = (email || '').trim().toLowerCase();
     if (!emailNorm || !password) return res.status(400).json({ message: 'Thiếu email hoặc mật khẩu' });
 
@@ -47,21 +48,39 @@ exports.register = async (req, res) => {
     if (exists) return res.status(409).json({ message: 'Email đã tồn tại' });
 
     const hash = await bcrypt.hash(password, 10);
-    const user = await User.create({
+
+    const payload = {
+      username: username,
       email: emailNorm,
       password: hash,
       fullName: fullName?.trim(),
       roles: ['STUDENT'],
       status: 'ACTIVE'
-    });
+    }
+
+    if (req.file) {
+      const folder = process.env.CLOUDINARY_FOLDER_AVATARS || 'elearning/avatars';
+      const up = await cloudinary.uploader.upload(req.file.path, { folder, resource_type: 'image' });
+      payload.avatarUrl = up.secure_url;
+      fs.unlink(req.file.path, () => { });
+    }
+
+    const user = await User.create(payload);
 
     const accessToken = signAccessToken(user);
-    const refreshToken = await issueRefreshTokenOnLogin(user._id); // upsert 1 doc/user
+    const refreshToken = await issueRefreshTokenOnLogin(user._id);
     setRefreshCookie(res, refreshToken);
 
-    res.json({
+    res.status(201).json({
       accessToken,
-      user: { id: user._id, email: user.email, fullName: user.fullName, roles: user.roles }
+      user: {
+        id: user._id,
+        email: user.email,
+        username: user.username,
+        fullName: user.fullName,
+        avatarUrl: user.avatarUrl,
+        roles: user.roles
+      }
     });
   } catch (e) {
     console.error('REGISTER_ERROR', e);
@@ -74,7 +93,7 @@ exports.login = async (req, res) => {
   try {
     const { email, password, admin } = req.body; // admin=true nếu login cho trang admin
     const emailNorm = (email || '').trim().toLowerCase();
-    const user = await User.findOne({ email: emailNorm }).select('+password roles fullName status');
+    const user = await User.findOne({ email: emailNorm }).select('+password roles fullName status avatarUrl');
     if (!user) return res.status(401).json({ message: 'Sai email hoặc mật khẩu' });
     if (user.status !== 'ACTIVE') return res.status(403).json({ message: 'Tài khoản không hoạt động' });
 
@@ -93,7 +112,7 @@ exports.login = async (req, res) => {
 
     res.json({
       accessToken,
-      user: { id: user._id, email: user.email, fullName: user.fullName, roles: user.roles }
+      user: { id: user._id, email: user.email, avatar: user.avatarUrl, fullName: user.fullName, roles: user.roles }
     });
   } catch (e) {
     console.error('LOGIN_ERROR', e);
@@ -152,5 +171,5 @@ exports.logout = async (req, res) => {
 // GET /auth/me
 exports.me = async (req, res) => {
   const u = req.user;
-  res.json({ id: u._id, email: u.email, fullName: u.fullName, roles: u.roles, status: u.status });
+  res.json({ id: u._id, email: u.email, fullName: u.fullName, avatar: u.avatarUrl, roles: u.roles, status: u.status });
 };
