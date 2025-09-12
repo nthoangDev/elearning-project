@@ -1,0 +1,317 @@
+:root {
+  --primary: #FFF9AF;
+  --secondary: #33A1E0;
+  --tertiary: #1C6EA4;
+  --dark: #154D71;
+  --white: #ffffff;
+  --light-gray: #f8fafc;
+  --gray: #64748b;
+  --dark-gray: #334155;
+  --border: rgba(21, 77, 113, 0.1);
+  --shadow: rgba(21, 77, 113, 0.15);
+  --success: #10b981;
+  --hover-overlay: rgba(255, 249, 175, 0.1);
+}
+
+.course-detail-container {
+  background: linear-gradient(135deg, var(--light-gray) 0%, var(--white) 100%);
+  min-height: 100vh;
+  padding: 2rem 0;
+}
+
+.course-header {
+  background: var(--white);
+  border-radius: 1rem;
+  box-shadow: 0 4px 20px var(--shadow);
+  overflow: hidden;
+  margin-bottom: 2rem;
+}
+
+.course-title {
+  color: var(--dark);
+  font-weight: 700;
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+  line-height: 1.2;
+}
+
+.instructor-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--gray);
+  margin-bottom: 1rem;
+}
+
+.instructor-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: var(--light-gray);
+  border-radius: 2rem;
+  font-weight: 500;
+}
+
+.course-badges {
+  display: flex;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.custom-badge {
+  padding: 0.5rem 1rem;
+  border-radius: 2rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.badge-level {
+  background: var(--secondary);
+  color: var(--white);
+}
+
+.badge-topic {
+  background: var(--primary);
+  color: var(--dark);
+}
+
+.course-description {
+  color: var(--dark-gray);
+  line-height: 1.6;
+  font-size: 1.1rem;
+  padding: 1.5rem 0;
+}
+
+.course-image {
+  border-radius: 1rem;
+  box-shadow: 0 8px 30px var(--shadow);
+  transition: transform 0.3s ease;
+}
+
+.course-image:hover {
+  transform: translateY(-5px);
+}
+
+.pricing-card {
+  background: linear-gradient(135deg, var(--white) 0%, var(--light-gray) 100%);
+  border: 2px solid var(--border);
+  border-radius: 1rem;
+  padding: 2rem;
+  box-shadow: 0 10px 40px var(--shadow);
+  position: sticky;
+  top: 2rem;
+}
+
+.price-current {
+  color: var(--tertiary);
+  font-size: 2.5rem;
+  font-weight: 800;
+  margin-bottom: 0.5rem;
+}
+
+.price-original {
+  color: var(--gray);
+  text-decoration: line-through;
+  font-size: 1.2rem;
+}
+
+.course-meta {
+  color: var(--gray);
+  font-size: 0.95rem;
+  margin: 1.5rem 0;
+  padding: 1rem;
+  background: var(--hover-overlay);
+  border-radius: 0.5rem;
+}
+
+.btn-purchase {
+  background: linear-gradient(135deg, var(--secondary) 0%, var(--tertiary) 100%);
+  border: none;
+  color: var(--white);
+  font-weight: 600;
+  font-size: 1.1rem;
+  padding: 1rem 2rem;
+  border-radius: 0.75rem;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(51, 161, 224, 0.4);
+}
+
+.btn-purchase:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(51, 161, 224, 0.6);
+  background: linear-gradient(135deg, var(--tertiary) 0%, var(--dark) 100%);
+}
+
+.content-section-title {
+  color: var(--dark);
+  font-size: 2rem;
+  font-weight: 700;
+  margin: 3rem 0 1.5rem 0;
+  position: relative;
+}
+
+.content-section-title::after {
+  content: '';
+  position: absolute;
+  bottom: -0.5rem;
+  left: 0;
+  width: 4rem;
+  height: 4px;
+  background: linear-gradient(90deg, var(--primary), var(--secondary));
+  border-radius: 2px;
+}
+
+.custom-accordion .accordion-item {
+  border: 2px solid var(--border);
+  border-radius: 1rem !important;
+  margin-bottom: 1rem;
+  overflow: hidden;
+  box-shadow: 0 4px 15px rgba(21, 77, 113, 0.08);
+}
+
+.custom-accordion .accordion-header button {
+  background: linear-gradient(135deg, var(--white) 0%, var(--light-gray) 100%);
+  border: none;
+  color: var(--dark);
+  font-weight: 600;
+  font-size: 1.1rem;
+  padding: 1.5rem;
+  transition: all 0.3s ease;
+}
+
+.custom-accordion .accordion-header button:hover {
+  background: var(--hover-overlay);
+}
+
+.custom-accordion .accordion-header button:not(.collapsed) {
+  background: linear-gradient(135deg, var(--primary) 0%, rgba(255, 249, 175, 0.7) 100%);
+  color: var(--dark);
+}
+
+.section-badge {
+  background: var(--secondary);
+  color: var(--white);
+  padding: 0.4rem 0.8rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+
+.lesson-count {
+  background: var(--border);
+  color: var(--gray);
+  padding: 0.25rem 0.75rem;
+  border-radius: 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.custom-accordion .accordion-body {
+  padding: 0;
+  background: var(--white);
+}
+
+.lesson-item {
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid var(--border);
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.lesson-item:hover {
+  background: var(--hover-overlay);
+}
+
+.lesson-item:last-child {
+  border-bottom: none;
+}
+
+.lesson-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.lesson-number {
+  color: var(--gray);
+  font-weight: 500;
+  width: 2rem;
+}
+
+.lesson-title {
+  color: var(--dark);
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.lesson-type {
+  background: var(--light-gray);
+  color: var(--dark-gray);
+  padding: 0.25rem 0.75rem;
+  border-radius: 1rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: uppercase;
+}
+
+.lesson-preview {
+  background: var(--success);
+  color: var(--white);
+  padding: 0.25rem 0.75rem;
+  border-radius: 1rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.lesson-duration {
+  color: var(--gray);
+  font-size: 0.875rem;
+  font-weight: 500;
+  min-width: 4rem;
+  text-align: right;
+}
+
+.loading-spinner {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 400px;
+}
+
+.not-found {
+  text-align: center;
+  color: var(--gray);
+  font-size: 1.2rem;
+  padding: 4rem 0;
+}
+
+.empty-content {
+  text-align: center;
+  color: var(--gray);
+  font-style: italic;
+  padding: 2rem;
+}
+
+@media (max-width: 768px) {
+  .course-title {
+    font-size: 2rem;
+  }
+  
+  .price-current {
+    font-size: 2rem;
+  }
+  
+  .content-section-title {
+    font-size: 1.5rem;
+  }
+  
+  .pricing-card {
+    position: static;
+    margin-top: 2rem;
+  }
+}

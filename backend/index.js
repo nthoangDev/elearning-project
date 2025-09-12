@@ -23,7 +23,7 @@ const FRONTEND_ORIGIN = process.env.FRONTEND_ORIGIN || 'http://localhost:3000';
 app.use(cors({
   origin: FRONTEND_ORIGIN, 
   methods: ['GET','POST','PUT','PATCH','DELETE','OPTIONS'],
-  allowedHeaders: ['Content-Type','Authorization'],
+  allowedHeaders: ['Content-Type','Authorization', 'ngrok-skip-browser-warning'],
 }));
 
 // ===== View engine =====

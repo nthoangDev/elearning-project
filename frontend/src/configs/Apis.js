@@ -2,6 +2,7 @@ import axios from 'axios';
 import cookie from 'react-cookies';
 
 const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:4000';
+// const BASE_URL = 'https://fab736920085.ngrok-free.app';
 
 export const endpoints = {
   // Auth
@@ -39,13 +40,33 @@ export const endpoints = {
   submissionDetail: (submissionId) => `/api/instructor/submissions/${submissionId}`, // GET
   gradeSubmission: (submissionId) => `/api/instructor/submissions/${submissionId}/grade`, // POST
   commentSubmission: (submissionId) => `/api/instructor/submissions/${submissionId}/comments`, // POST
+
+  // Public
+  listCourses: '/api/public/courses',
+  courseDetail: (idOrSlug) => `/api/public/courses/${idOrSlug}`,
+
+  // Cart
+  studentCart: '/api/student/cart',
+  addToCart: '/api/student/cart/add',
+  removeCartCourse: (courseId) => `/api/student/cart/course/${courseId}`,
+  setCartQuantity: '/api/student/cart/quantity',
+
+  // Checkout
+  createMoMoPayment: '/api/student/checkout/momo/create',
+  createVnpayPayment: '/api/student/checkout/vnpay/create',
+
+  // Orders
+  studentOrders: '/api/student/orders',
 };
 
 // Axios instances
-export default axios.create({ baseURL: BASE_URL });
+export default axios.create({
+  baseURL: BASE_URL,
+  headers: { 'ngrok-skip-browser-warning': 'true' } // Bỏ qua cảnh báo của ngrok free
+});
 
 export const authApis = () =>
   axios.create({
     baseURL: BASE_URL,
-    headers: { Authorization: `Bearer ${cookie.load('token')}` },
+    headers: { Authorization: `Bearer ${cookie.load('token')}`, 'ngrok-skip-browser-warning': 'true' },
   });

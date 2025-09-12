@@ -4,9 +4,6 @@ const { requireInstructor, canManageCourse, canManageLesson } =
     require('../../middlewares/require-instructor');
 const ctl = require('../../controller/client/instructor.course.controller');
 
-// xác thực quyền giảng quyền
-router.use(requireInstructor);
-
 // Courses
 router.get('/my-courses', ctl.getMyCourses);
 

@@ -28,7 +28,7 @@ const CourseSchema = new Schema({
   instructors: [CourseInstructorSub]
 }, { timestamps: true });
 
-CourseSchema.index({ price: 1 });
+CourseSchema.index({ title: 'text', description: 'text' });
 const Course = model('Course', CourseSchema);
 
 module.exports = Course;
