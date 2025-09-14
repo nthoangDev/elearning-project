@@ -57,6 +57,16 @@ export const endpoints = {
 
   // Orders
   studentOrders: '/api/student/orders',
+
+  studentCourseOutline: (courseId) => `/api/student/courses/${courseId}/outline`,
+  studentLessonDetail: (lessonId) => `/api/student/lessons/${lessonId}`,
+  studentLessonComplete: (lessonId) => `/api/student/lessons/${lessonId}/complete`,
+  studentLessonUncomplete: (lessonId) => `/api/student/lessons/${lessonId}/uncomplete`,
+  studentCourseProgress: (courseId) => `/api/student/courses/${courseId}/progress`,
+  studentDeadlines: (withinDays = 7) => `/api/student/deadlines?withinDays=${withinDays}`,
+  assessmentDetail: (id) => `/api/student/assessments/${id}`,
+  submitQuiz:      (id) => `/api/student/assessments/${id}/submit-quiz`,
+  submitAssignment: (id) => `/api/student/assessments/${id}/submit-assignment`,
 };
 
 // Axios instances

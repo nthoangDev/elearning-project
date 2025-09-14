@@ -4,7 +4,7 @@ const submissionCtl = require('../../controller/client/student.submission.contro
 const { uploadAssessmentFiles } = require('../../middlewares/upload');
 
 router.post('/assessments/:assessmentId/submit-assignment', uploadAssessmentFiles, submissionCtl.submitAssignment);
-
 router.post('/assessments/:assessmentId/submit-quiz', submissionCtl.submitQuiz);
+router.get('/assessments/:assessmentId',submissionCtl.getAssessmentDetail);
 
 module.exports = router;

@@ -1,15 +1,16 @@
 const { Schema, model, Types } = require('mongoose');
 
 const AssessmentSchema = new Schema({
-    course: { type: Types.ObjectId, ref: 'Course', required: true, index: true },
-    section: { type: Types.ObjectId, ref: 'Section', index: true },
-    assessmentType: { type: String, required: true, enum: ['ASSIGNMENT', 'QUIZ'], index: true },
-    title: { type: String, required: true },
-    description: { type: String },
-    points: { type: Number, default: 100 },
-    availableAt: { type: Date },
-    dueAt: { type: Date },
-    createdBy: { type: Types.ObjectId, ref: 'User' }
+  course: { type: Types.ObjectId, ref: 'Course', required: true, index: true },
+  section: { type: Types.ObjectId, ref: 'Section', index: true },
+  lesson:  { type: Types.ObjectId, ref: 'Lesson', index: true },
+  assessmentType: { type: String, required: true, enum: ['ASSIGNMENT', 'QUIZ'], index: true },
+  title: { type: String, required: true },
+  description: { type: String },
+  points: { type: Number, default: 100 },
+  availableAt: { type: Date },
+  dueAt: { type: Date },
+  createdBy: { type: Types.ObjectId, ref: 'User' }
 }, { timestamps: true, discriminatorKey: 'assessmentType' });
 
 const Assessment = model('Assessment', AssessmentSchema);

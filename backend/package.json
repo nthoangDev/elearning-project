@@ -25,6 +25,7 @@
     "express-flash": "^0.0.2",
     "express-session": "^1.18.2",
     "express-validator": "^7.2.1",
+    "firebase-admin": "^13.5.0",
     "helmet": "^8.1.0",
     "jsonwebtoken": "^9.0.2",
     "method-override": "^3.0.0",

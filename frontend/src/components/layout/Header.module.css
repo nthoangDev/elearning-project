@@ -197,6 +197,7 @@
 
 .iconBtn:hover {
   background: var(--primary);
+  color: var(--tertiary);
   transform: translateY(-2px);
   box-shadow: 0 8px 25px rgba(51, 161, 224, 0.2);
 }

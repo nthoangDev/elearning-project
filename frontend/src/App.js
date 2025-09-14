@@ -21,6 +21,11 @@ import CartPage from './components/student/CartPage';
 import CheckoutResult from './components/student/CheckoutResult';
 import OrderHistory from './components/student/OrderHistory';
 import GatewayReturnBridge from './components/student/GatewayReturnBridge';
+import StudentCoursePlayer from './components/student/LearningHome.js';
+import LearningHome from './components/student/LearningHome.js';
+import CourseOutlineStudent from './components/student/CourseOutlineStudent.js';
+import LessonView from './components/student/LessonView.js';
+import Deadlines from './components/student/Deadlines.js';
 
 export default function App() {
   return (
@@ -48,6 +53,11 @@ export default function App() {
           <Route path="/checkout/success" element={<CheckoutResult kind="success" />} />
           <Route path="/checkout/cancel" element={<CheckoutResult kind="cancel" />} />
           <Route path="/orders" element={<OrderHistory />} />
+          <Route path="/learning" element={<LearningHome />} />
+          <Route path="/learning/course/:courseId" element={<CourseOutlineStudent />} />
+          <Route path="/learning/lesson/:lessonId" element={<LessonView />} />
+          <Route path="/learning/deadlines" element={<Deadlines />} />
+
 
           <Route
             path="/instructor/courses"

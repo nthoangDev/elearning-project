@@ -1,33 +1,42 @@
+// components/Header/Header.jsx
 import { useContext, useEffect, useState } from "react";
-import { NavLink, Link, useNavigate } from "react-router-dom";
+import { NavLink, Link, useNavigate, useLocation } from "react-router-dom";
 import { Navbar, Container, Nav, Dropdown, Image } from "react-bootstrap";
 import { MyUserContext } from "../../context/context";
+import { MyNotificationContext } from "../../context/NotificationContext"; // ✅
 import styles from "./Header.module.css";
-import axios, { endpoints } from "../../configs/Apis";
+import axios, { authApis, endpoints } from "../../configs/Apis";
+import useFCM from "../../hooks/useFCM";
 
-const SITE = {
-  name: "ELearnPro",
-  tagline: "E-LEARNING SYSTEM",
-};
+const SITE = { name: "ELearnPro", tagline: "E-LEARNING SYSTEM" };
 
 export default function Header() {
   const nav = useNavigate();
-  const { user, userDispatch } = useContext(MyUserContext);
-  const isInstructor =
-    user?.roles?.includes("INSTRUCTOR") || user?.roles?.includes("ADMIN");
+  const location = useLocation();
 
+  const { user, userDispatch } = useContext(MyUserContext);
+  const { noti, fetchDeadlines, reset: resetNoti } = useContext(MyNotificationContext); // ✅
+
+  const isInstructor = user?.roles?.includes("INSTRUCTOR") || user?.roles?.includes("ADMIN");
+  const isStudent = user?.roles?.includes("STUDENT");
+
+  // topics
   const [topics, setTopics] = useState([]);
   const [topicsLoading, setTopicsLoading] = useState(false);
 
+  // cart
+  const [cartCount, setCartCount] = useState(0);
+  const showCartBadge = cartCount > 0;
+
+  // load topics (public)
   useEffect(() => {
     let alive = true;
     (async () => {
       try {
         setTopicsLoading(true);
-        const url =
-          (endpoints && endpoints.listTopics) || "/api/public/topics";
+        const url = (endpoints && endpoints.listTopics) || "/api/public/topics";
         const res = await axios.get(url);
-        const arr = Array.isArray(res.data) ? res.data : (res.data?.items || []);
+        const arr = Array.isArray(res.data) ? res.data : res.data?.items || [];
         if (alive) setTopics(arr);
       } catch {
         if (alive) setTopics([]);
@@ -38,18 +47,94 @@ export default function Header() {
     return () => { alive = false; };
   }, []);
 
+  // cart count
+  const fetchCartCount = async () => {
+    if (!user) { setCartCount(0); return; }
+    try {
+      const url = (endpoints && endpoints.studentCart) || "/api/student/cart";
+      const res = await authApis().get(url);
+      const items = res?.data?.items || [];
+      const total = items.reduce((s, it) => s + (Number(it.quantity) || 1), 0) || items.length || 0;
+      setCartCount(total);
+    } catch { setCartCount(0); }
+  };
+
+  useEffect(() => {
+    fetchCartCount();
+    if (user) fetchDeadlines(7);
+    else resetNoti();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, location.pathname]);
+
   const gotoTopic = (slugOrId) => {
-    if (!slugOrId) {
-      nav("/courses");
-      return;
-    }
+    if (!slugOrId) return nav("/courses");
     nav(`/courses?topic=${encodeURIComponent(slugOrId)}`);
   };
 
   const logout = () => {
     userDispatch({ type: "logout" });
+    resetNoti(); 
     nav("/login");
   };
+
+  const showBellBadge = (noti?.reminderCount || 0) > 0;
+
+  const fmtDue = (iso) => {
+    if (!iso) return "Không rõ hạn";
+    try { return new Date(iso).toLocaleString(); } catch { return iso; }
+  };
+
+  useFCM({ onDeadline: () => fetchDeadlines?.(7) });
+
+  const BellDropdown = () => (
+    <Dropdown align="end">
+      <Dropdown.Toggle className={styles.iconBtn} aria-label="Thông báo deadline">
+        <i className="bi bi-bell" />
+        {showBellBadge && <span className={styles.badge}>{noti?.reminderCount || 0}</span>}
+      </Dropdown.Toggle>
+      <Dropdown.Menu className={styles.dropdownMenu}>
+        <div className="px-3 pt-2 pb-2 fw-bold">Thông báo Deadline</div>
+        <Dropdown.Divider />
+        {noti?.loading && (
+          <Dropdown.ItemText className="text-muted px-3">Đang tải…</Dropdown.ItemText>
+        )}
+        {!noti?.loading && (noti?.items?.length || 0) === 0 && (
+          <Dropdown.ItemText className="text-muted px-3">
+            Không có deadline trong 7 ngày tới
+          </Dropdown.ItemText>
+        )}
+        {!noti?.loading &&
+          (noti?.items || []).slice(0, 8).map((d) => (
+            <Dropdown.Item
+              key={d._id}
+              onClick={() => nav(`/learning/deadlines?focus=${encodeURIComponent(d._id)}`)}
+              className={styles.dropdownItem}
+            >
+              <div className="d-flex flex-column">
+                <span className="fw-semibold">
+                  {d.title}{" "}
+                  <span className="text-uppercase small ms-1">
+                    {d.type === "QUIZ" ? "Quiz" : "Assignment"}
+                  </span>
+                </span>
+                <span className="small text-muted">
+                  Hạn: {fmtDue(d.dueAt)} • {d.submitted ? "Đã nộp" : "Chưa nộp"}
+                  {d.graded ? " • Đã chấm" : ""}
+                </span>
+              </div>
+            </Dropdown.Item>
+          ))}
+        {(noti?.items?.length || 0) > 0 && (
+          <>
+            <Dropdown.Divider />
+            <Dropdown.Item as={Link} to="/learning/deadlines" className={styles.dropdownItem}>
+              Xem tất cả deadline
+            </Dropdown.Item>
+          </>
+        )}
+      </Dropdown.Menu>
+    </Dropdown>
+  );
 
   return (
     <Navbar expand="lg" className={`${styles.navbar} sticky-top`}>
@@ -67,52 +152,42 @@ export default function Header() {
 
         {/* Mobile right cluster */}
         <div className={styles.rightClusterMobile}>
-          <button className={styles.iconBtn} aria-label="Cart">
+          {user && <BellDropdown />}
+
+          <Link to="/cart" className={styles.iconBtn} aria-label="Cart">
             <i className="bi bi-bag" />
-          </button>
-          <button className={styles.iconBtn} aria-label="Search">
+            {showCartBadge && <span className={styles.badge}>{cartCount}</span>}
+          </Link>
+
+          <button className={styles.iconBtn} aria-label="Search" onClick={() => nav("/courses")}>
             <i className="bi bi-search" />
           </button>
           <Navbar.Toggle aria-controls="main-nav" className={styles.toggle} />
         </div>
 
         <Navbar.Collapse id="main-nav">
-          {/* Primary navigation (center) */}
+          {/* Center nav */}
           <Nav className={`mx-auto ${styles.primaryNav}`}>
-            <NavLink
-              to="/"
-              end
-              className={({ isActive }) =>
-                `${styles.navLink} ${isActive ? styles.active : ""}`
-              }
-            >
+            <NavLink to="/" end className={({ isActive }) => `${styles.navLink} ${isActive ? styles.active : ""}`}>
               <i className="bi bi-house me-2" />
               Home
             </NavLink>
 
+            {/* Topics */}
             <Dropdown align="start">
-              <Dropdown.Toggle
-                id="topics-dropdown"
-                className={`${styles.navLink} ${styles.dropdownToggleLikeLink}`}
-              >
+              <Dropdown.Toggle id="topics-dropdown" className={`${styles.navLink} ${styles.dropdownToggleLikeLink}`}>
                 <i className="bi bi-grid me-2" />
                 Chủ đề
               </Dropdown.Toggle>
-              {/* UPDATED: Changed className to dropdownMenu for consistency */}
               <Dropdown.Menu className={styles.dropdownMenu}>
                 {topicsLoading && (
-                  <Dropdown.ItemText className="text-muted px-3">
-                    Đang tải…
-                  </Dropdown.ItemText>
+                  <Dropdown.ItemText className="text-muted px-3">Đang tải…</Dropdown.ItemText>
                 )}
                 {!topicsLoading && topics.length === 0 && (
-                  <Dropdown.ItemText className="text-muted px-3">
-                    Chưa có chủ đề
-                  </Dropdown.ItemText>
+                  <Dropdown.ItemText className="text-muted px-3">Chưa có chủ đề</Dropdown.ItemText>
                 )}
                 {!topicsLoading &&
                   topics.map((t) => (
-                    // UPDATED: Added className for consistent styling
                     <Dropdown.Item
                       key={t._id || t.slug}
                       onClick={() => gotoTopic(t.slug || t._id)}
@@ -122,83 +197,85 @@ export default function Header() {
                     </Dropdown.Item>
                   ))}
                 <Dropdown.Divider />
-                {/* UPDATED: Added className for consistent styling */}
                 <Dropdown.Item onClick={() => gotoTopic("")} className={styles.dropdownItem}>
                   Tất cả chủ đề
                 </Dropdown.Item>
               </Dropdown.Menu>
             </Dropdown>
 
+            {/* Student group */}
+            {user && (isStudent || !isInstructor) && (
+              <Dropdown align="start">
+                <Dropdown.Toggle id="learning-dropdown" className={`${styles.navLink} ${styles.dropdownToggleLikeLink}`}>
+                  <i className="bi bi-journal-check me-2" />
+                  Học tập
+                </Dropdown.Toggle>
+                <Dropdown.Menu className={styles.dropdownMenu}>
+                  <Dropdown.Item as={Link} to="/learning" className={styles.dropdownItem}>
+                    Khóa học của tôi
+                  </Dropdown.Item>
+                </Dropdown.Menu>
+              </Dropdown>
+            )}
+
+            {/* Instructor group */}
             {isInstructor && (
-              <>
-                <NavLink
-                  to="/instructor/courses"
-                  className={({ isActive }) =>
-                    `${styles.navLink} ${isActive ? styles.active : ""}`
-                  }
-                >
+              <Dropdown align="start">
+                <Dropdown.Toggle id="instructor-dropdown" className={`${styles.navLink} ${styles.dropdownToggleLikeLink}`}>
                   <i className="bi bi-mortarboard me-2" />
-                  Khoá dạy
-                </NavLink>
-                <NavLink
-                  to="/instructor/grading"
-                  className={({ isActive }) =>
-                    `${styles.navLink} ${isActive ? styles.active : ""}`
-                  }
-                >
-                  <i className="bi bi-clipboard-check me-2" />
-                  Chấm bài
-                </NavLink>
-              </>
+                  Giảng dạy
+                </Dropdown.Toggle>
+                <Dropdown.Menu className={styles.dropdownMenu}>
+                  <Dropdown.Item as={Link} to="/instructor/courses" className={styles.dropdownItem}>
+                    Khoá dạy
+                  </Dropdown.Item>
+                  <Dropdown.Item as={Link} to="/instructor/grading" className={styles.dropdownItem}>
+                    Chấm bài
+                  </Dropdown.Item>
+                </Dropdown.Menu>
+              </Dropdown>
             )}
           </Nav>
 
-          {/* Actions (right) */}
+          {/* Right actions */}
           <Nav className={styles.actions}>
-            <div className={styles.actionGroup}>
-              <Link to={'/cart'} className={styles.iconBtn} aria-label="Cart">
-                <i className="bi bi-bag" />
-                <span className={styles.badge}>3</span>
-              </Link>
-              <button className={styles.iconBtn} aria-label="Search">
-                <i className="bi bi-search" />
-              </button>
-            </div>
+            {user && <BellDropdown />}
+
+            <Link to="/cart" className={styles.iconBtn} aria-label="Cart">
+              <i className="bi bi-bag" />
+              {showCartBadge && <span className={styles.badge}>{cartCount}</span>}
+            </Link>
+
+            <button className={styles.iconBtn} aria-label="Search" onClick={() => nav("/courses")}>
+              <i className="bi bi-search" />
+            </button>
 
             {!user ? (
-              <NavLink to="/login" className={styles.loginBtn}>
-                <i className="bi bi-box-arrow-in-right me-2" />
-                Đăng nhập
-              </NavLink>
+              <>
+                <NavLink to="/login" className={styles.loginBtn}>
+                  <i className="bi bi-box-arrow-in-right me-2" />
+                  Đăng nhập
+                </NavLink>
+                <NavLink to="/register" className={styles.loginBtn} style={{ marginLeft: 8 }}>
+                  <i className="bi bi-person-plus me-2" />
+                  Đăng ký
+                </NavLink>
+              </>
             ) : (
               <Dropdown align="end">
                 <Dropdown.Toggle className={styles.dropdownToggle}>
                   <div className={styles.userAvatar}>
-                    <img
-                      src={user.avatar || "/avatar_default.png"}
-                      alt="avatar"
-                      className={styles.avatarImg}
-                    />
+                    <img src={user.avatar || "/avatar_default.png"} alt="avatar" className={styles.avatarImg} />
                     <div className={styles.onlineStatus}></div>
                   </div>
-                  <span className={styles.userName}>
-                    {user.fullName || user.email}
-                  </span>
+                  <span className={styles.userName}>{user.fullName || user.email}</span>
                 </Dropdown.Toggle>
                 <Dropdown.Menu className={styles.dropdownMenu}>
                   <div className={styles.userInfo}>
-                    <img
-                      src={user.avatar || "/avatar_default.png"}
-                      alt="avatar"
-                      className={styles.dropdownAvatar}
-                    />
+                    <img src={user.avatar || "/avatar_default.png"} alt="avatar" className={styles.dropdownAvatar} />
                     <div>
-                      <div className={styles.dropdownUserName}>
-                        {user.fullName || user.email}
-                      </div>
-                      <div className={styles.dropdownUserEmail}>
-                        {user.email}
-                      </div>
+                      <div className={styles.dropdownUserName}>{user.fullName || user.email}</div>
+                      <div className={styles.dropdownUserEmail}>{user.email}</div>
                     </div>
                   </div>
                   <Dropdown.Divider />
@@ -206,21 +283,15 @@ export default function Header() {
                     <i className="bi bi-person me-2" />
                     Hồ sơ cá nhân
                   </Dropdown.Item>
-
                   <Dropdown.Item as={Link} to="/orders" className={styles.dropdownItem}>
                     <i className="bi bi-bag-check me-2" />
                     Lịch sử đơn hàng
                   </Dropdown.Item>
-
                   <Dropdown.Item as={Link} to="/settings" className={styles.dropdownItem}>
                     <i className="bi bi-gear me-2" />
                     Cài đặt
                   </Dropdown.Item>
-
-                  <Dropdown.Item
-                    onClick={logout}
-                    className={`${styles.dropdownItem} ${styles.logoutItem}`}
-                  >
+                  <Dropdown.Item onClick={logout} className={`${styles.dropdownItem} ${styles.logoutItem}`}>
                     <i className="bi bi-box-arrow-right me-2" />
                     Đăng xuất
                   </Dropdown.Item>

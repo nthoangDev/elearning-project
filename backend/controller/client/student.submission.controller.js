@@ -26,7 +26,7 @@ module.exports.submitAssignment = async (req, res, next) => {
   try {
     const { assessmentId } = req.params;
     const asmt = await Assessment.findById(assessmentId).lean();
-    console.log(req.body)
+    // console.log(req.body)
     if (!asmt || asmt.assessmentType !== 'ASSIGNMENT')
       return res.status(404).send('Assignment not found');
     if (!withinWindow(asmt)) return res.status(403).send('Chưa mở hoặc đã đóng');
@@ -118,4 +118,110 @@ exports.submitQuiz = async (req, res, next) => {
 
     return res.status(201).json(sub);
   } catch (e) { next(e); }
+};
+
+function withinWindow(as) {
+  const t = Date.now();
+  if (as?.availableAt && t < new Date(as.availableAt).getTime()) return false;
+  if (as?.dueAt && t > new Date(as.dueAt).getTime()) return false; // <- đóng sau hạn
+  return true;
+}
+
+// [GET] /api/student/assessments/:assessmentId
+exports.getAssessmentDetail = async (req, res, next) => {
+  try {
+    const { assessmentId } = req.params;
+
+    // Lấy đủ trường chung + trường đặc thù (nhánh QUIZ/ASSIGNMENT) từ discriminator
+    const asmt = await Assessment.findById(assessmentId)
+      .select(
+        // Chung
+        'title description assessmentType course section lesson points availableAt dueAt ' +
+        // ASSIGNMENT
+        'maxScore ' +
+        // QUIZ
+        'durationMinutes passScore shuffleQuestions attemptsAllowed questions'
+      )
+      .lean();
+
+    if (!asmt) {
+      return res.status(404).json({ message: 'Assessment not found' });
+    }
+
+    // Helper lấy text an toàn
+    const pickText = (obj, fallback = '') => {
+      if (obj == null) return fallback;
+      if (typeof obj === 'string') return obj;
+      return (
+        obj.text ??
+        obj.label ??
+        obj.title ??
+        obj.content ?? // dùng cho QuizOptionSub.content
+        obj.value ??
+        fallback
+      );
+    };
+
+    const basePayload = {
+      _id: String(asmt._id),
+      assessmentType: asmt.assessmentType,           // 'ASSIGNMENT' | 'QUIZ'
+      title: asmt.title || (asmt.assessmentType === 'QUIZ' ? 'Quiz' : 'Assignment'),
+      description: asmt.description || '',
+      course: asmt.course || null,
+      section: asmt.section || null,
+      lesson: asmt.lesson || null,
+      lessonId: asmt.lesson ? String(asmt.lesson) : null, // tiện cho FE
+      points: typeof asmt.points === 'number' ? asmt.points : 100,
+      availableAt: asmt.availableAt || null,
+      dueAt: asmt.dueAt || null,
+    };
+
+    // Nếu là ASSIGNMENT
+    if (asmt.assessmentType === 'ASSIGNMENT') {
+      return res.json({
+        ...basePayload,
+        assignment: {
+          maxScore: typeof asmt.maxScore === 'number' ? asmt.maxScore : 100
+        }
+      });
+    }
+
+    // Nếu là QUIZ -> làm sạch câu hỏi, KHÔNG trả isCorrect
+    if (asmt.assessmentType === 'QUIZ') {
+      const rawQuestions = Array.isArray(asmt.questions) ? asmt.questions : [];
+
+      const safeQuestions = rawQuestions.map((q, idx) => {
+        const qText =
+          pickText(q.question, null) || // theo schema: question là string
+          pickText(q, `Câu hỏi ${idx + 1}`);
+        const qType = q.type || q.questionType || 'SINGLE';
+        const qScore =
+          (typeof q.score === 'number' && Number.isFinite(q.score)) ? q.score : 1;
+
+        const optsSrc = Array.isArray(q.options) ? q.options : [];
+        const options = optsSrc.map((o, oi) => ({
+          // KHÔNG trả isCorrect
+          text: pickText(o.content, null) || pickText(o, `Lựa chọn ${oi + 1}`)
+        }));
+
+        return { type: qType, text: qText, score: qScore, options };
+      });
+
+      return res.json({
+        ...basePayload,
+        quiz: {
+          durationMinutes: asmt.durationMinutes ?? null,
+          passScore: (typeof asmt.passScore === 'number' ? asmt.passScore : 60),
+          shuffleQuestions: !!asmt.shuffleQuestions,
+          attemptsAllowed: (typeof asmt.attemptsAllowed === 'number' ? asmt.attemptsAllowed : 1),
+          questions: safeQuestions
+        }
+      });
+    }
+
+    // Phòng trường hợp enum khác/không khớp
+    return res.status(400).json({ message: 'Unsupported assessment type' });
+  } catch (e) {
+    next(e);
+  }
 };

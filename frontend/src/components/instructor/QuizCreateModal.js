@@ -9,15 +9,24 @@ const emptyQ = () => ({
   options: [{ content: '', isCorrect: false }],
 });
 
+const toISOOrNull = (s) => {
+  if (!s) return null;
+  const d = new Date(s);
+  return isNaN(d.getTime()) ? null : d.toISOString();
+};
+
 export default function QuizCreateModal({ show, courseId, lessonId, onHide, onSaved }) {
   const api = authApis();
 
   const [title, setTitle] = useState('Bài kiểm tra');
   const [description, setDescription] = useState('');
+  const [points, setPoints] = useState(100);            // <-- thêm points (tổng điểm)
   const [passScore, setPassScore] = useState(60);
   const [durationMinutes, setDurationMinutes] = useState(10);
   const [attemptsAllowed, setAttemptsAllowed] = useState(1);
   const [shuffleQuestions, setShuffleQuestions] = useState(false);
+  const [availableAt, setAvailableAt] = useState('');   // <-- deadline start
+  const [dueAt, setDueAt] = useState('');               // <-- deadline end
   const [questions, setQuestions] = useState([emptyQ()]);
   const [saving, setSaving] = useState(false);
 
@@ -25,10 +34,13 @@ export default function QuizCreateModal({ show, courseId, lessonId, onHide, onSa
     if (show) {
       setTitle('Bài kiểm tra');
       setDescription('');
+      setPoints(100);
       setPassScore(60);
       setDurationMinutes(10);
       setAttemptsAllowed(1);
       setShuffleQuestions(false);
+      setAvailableAt('');
+      setDueAt('');
       setQuestions([emptyQ()]);
       setSaving(false);
     }
@@ -72,6 +84,19 @@ export default function QuizCreateModal({ show, courseId, lessonId, onHide, onSa
     if (!courseId) return 'Thiếu courseId';
     if (!lessonId) return 'Thiếu lessonId (nút mở modal phải truyền lesson._id)';
     if (!title.trim()) return 'Nhập tiêu đề';
+
+    // validate điểm/tgian
+    if (!(Number(points) > 0)) return 'Tổng điểm (points) phải > 0';
+    if (!(Number(passScore) >= 0 && Number(passScore) <= 100)) return 'Điểm đạt (%) phải trong [0..100]';
+    if (!(Number(durationMinutes) > 0)) return 'Thời lượng (phút) phải > 0';
+    if (!(Number(attemptsAllowed) >= 1)) return 'Số lần làm phải >= 1';
+
+    // validate deadline
+    if (availableAt && isNaN(new Date(availableAt).getTime())) return 'availableAt không hợp lệ';
+    if (dueAt && isNaN(new Date(dueAt).getTime())) return 'dueAt không hợp lệ';
+    if (availableAt && dueAt && new Date(availableAt) > new Date(dueAt)) return 'availableAt phải <= dueAt';
+
+    // validate câu hỏi
     if (!questions.length) return 'Thêm ít nhất 1 câu hỏi';
     for (let i = 0; i < questions.length; i++) {
       const q = questions[i];
@@ -96,10 +121,13 @@ export default function QuizCreateModal({ show, courseId, lessonId, onHide, onSa
     const body = {
       title: title.trim(),
       description,
+      points: Number(points) || 100,
       passScore: Number(passScore) || 60,
       durationMinutes: Number(durationMinutes) || 10,
       attemptsAllowed: Number(attemptsAllowed) || 1,
       shuffleQuestions: !!shuffleQuestions,
+      availableAt: toISOOrNull(availableAt),   // <-- gửi ISO
+      dueAt: toISOOrNull(dueAt),               // <-- gửi ISO
       questions: questions.map((q, i) => ({
         question: q.question.trim(),
         type: q.type,
@@ -113,12 +141,8 @@ export default function QuizCreateModal({ show, courseId, lessonId, onHide, onSa
 
     try {
       setSaving(true);
-      // 1) Tạo quiz theo course
-      const created = await api.post(endpoints.createQuiz(lessonId), body);
-      const assessmentId = created.data?._id;
-
-      // 2) Gắn quiz vào bài học
-      await api.post(endpoints.attachAssessmentToLesson(lessonId, assessmentId));
+      // BE đã set lesson/course trong createQuiz => chỉ cần 1 call
+      await api.post(endpoints.createQuiz(lessonId), body);
 
       onHide?.();
       onSaved?.();
@@ -155,6 +179,12 @@ export default function QuizCreateModal({ show, courseId, lessonId, onHide, onSa
 
           <Col md={3}>
             <Form.Group className="mb-3">
+              <Form.Label>Tổng điểm (points)</Form.Label>
+              <Form.Control type="number" value={points} onChange={(e) => setPoints(e.target.value)} />
+            </Form.Group>
+          </Col>
+          <Col md={3}>
+            <Form.Group className="mb-3">
               <Form.Label>Điểm đạt (%)</Form.Label>
               <Form.Control type="number" value={passScore} onChange={(e) => setPassScore(e.target.value)} />
             </Form.Group>
@@ -171,7 +201,32 @@ export default function QuizCreateModal({ show, courseId, lessonId, onHide, onSa
               <Form.Control type="number" value={attemptsAllowed} onChange={(e) => setAttemptsAllowed(e.target.value)} />
             </Form.Group>
           </Col>
-          <Col md={3} className="d-flex align-items-end">
+
+          {/* Deadline */}
+          <Col md={6}>
+            <Form.Group className="mb-3">
+              <Form.Label>Mở lúc (availableAt)</Form.Label>
+              <Form.Control
+                type="datetime-local"
+                value={availableAt}
+                onChange={(e) => setAvailableAt(e.target.value)}
+              />
+              <Form.Text className="text-muted">Để trống nếu mở ngay.</Form.Text>
+            </Form.Group>
+          </Col>
+          <Col md={6}>
+            <Form.Group className="mb-3">
+              <Form.Label>Đóng lúc (dueAt)</Form.Label>
+              <Form.Control
+                type="datetime-local"
+                value={dueAt}
+                onChange={(e) => setDueAt(e.target.value)}
+              />
+              <Form.Text className="text-muted">Để trống nếu không giới hạn thời hạn.</Form.Text>
+            </Form.Group>
+          </Col>
+
+          <Col md={12} className="d-flex align-items-center">
             <Form.Check
               className="mb-3"
               label="Trộn câu hỏi"
