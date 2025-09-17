@@ -1,10 +1,181 @@
-extends ../../layouts/default.pug
+//- views/admin/pages/dashboard/index.pug
+extends ../../layouts/default
 
-block styles 
-    link(rel="stylesheet", href="/public/admin/css/dashboard.css")
+block head
+  link(rel="stylesheet", href="/public/admin/css/dashboard.css")
+  meta(name="viewport" content="width=device-width, initial-scale=1.0")
 
 block main
-    //- Page Header
+  //- Chặn optional chaining & code phức tạp
+  - var F = (filters && typeof filters === 'object') ? filters : {};
+  - var K = (kpis && typeof kpis === 'object') ? kpis : {};
+  - var C = (charts && typeof charts === 'object') ? charts : {};
+
+  .container-fluid
     .page-header
-        .d-flex.flex-wrap.justify-content-between.align-items-center.gap-2
-            h3.page-title Tổng quan
+      .row.align-items-center.g-3
+        .col-12.col-lg-6
+          h3.page-title
+            i.bi.bi-speedometer2.me-3
+            | Bảng điều khiển
+        .col-12.col-lg-6
+          .filter-bar
+            form#dateRangeForm.d-flex.gap-2(method="get")
+              .input-group
+                span.input-group-text
+                  i.bi.bi-calendar-range
+                input.form-control(type="date", name="from", value=(F.from || ''), placeholder="Từ ngày")
+              .input-group
+                span.input-group-text
+                  i.bi.bi-calendar-check
+                input.form-control(type="date", name="to", value=(F.to || ''), placeholder="Đến ngày")
+              .btn-group(role="group")
+                button#btnLast7.btn.btn-outline-secondary(type="button")
+                  i.bi.bi-calendar-week.me-1
+                  | 7 ngày
+                button#btnLast30.btn.btn-outline-secondary(type="button")
+                  i.bi.bi-calendar-month.me-1
+                  | 30 ngày
+              button.btn.btn-primary(type="submit")
+                i.bi.bi-funnel.me-1
+                | Lọc dữ liệu
+
+    .kpis-container
+      .row.g-4
+        .col-12.col-sm-6.col-xl-3
+          .card.kpi-card.text-center
+            .d-flex.align-items-center.justify-content-between
+              .kpi-content
+                .kpi-label
+                  i.bi.bi-currency-dollar.me-2
+                  | Tổng doanh thu
+                .kpi-num#totalRevenue= (K.revenueAll || 0).toLocaleString('vi-VN') + ' VND'
+              .kpi-icon
+                i.bi.bi-graph-up-arrow.text-primary.display-4.opacity-25
+        
+        .col-12.col-sm-6.col-xl-3
+          .card.kpi-card.text-center
+            .d-flex.align-items-center.justify-content-between
+              .kpi-content
+                .kpi-label
+                  i.bi.bi-person-plus.me-2
+                  | Người dùng mới
+                .kpi-num#newUsers= (K.usersNew || 0).toLocaleString('vi-VN')
+              .kpi-icon
+                i.bi.bi-people.text-success.display-4.opacity-25
+        
+        .col-12.col-sm-6.col-xl-3
+          .card.kpi-card.text-center
+            .d-flex.align-items-center.justify-content-between
+              .kpi-content
+                .kpi-label
+                  i.bi.bi-journal-check.me-2
+                  | Tổng ghi danh
+                .kpi-num#totalEnrollments= (K.enrollmentsTotal || 0).toLocaleString('vi-VN')
+              .kpi-icon
+                i.bi.bi-mortarboard.text-warning.display-4.opacity-25
+        
+        .col-12.col-sm-6.col-xl-3
+          .card.kpi-card.text-center
+            .d-flex.align-items-center.justify-content-between
+              .kpi-content
+                .kpi-label
+                  i.bi.bi-check2-circle.me-2
+                  | Đơn đã thanh toán
+                .kpi-num#paidOrders= (K.ordersPaidTotal || 0).toLocaleString('vi-VN')
+              .kpi-icon
+                i.bi.bi-credit-card.text-info.display-4.opacity-25
+
+    .charts-container
+      .row.g-4
+        .col-12.col-xl-8
+          .card.chart-card
+            .card-header.bg-transparent.border-0.pb-0
+              .d-flex.justify-content-between.align-items-center
+                .chart-title
+                  h6.mb-1
+                    i.bi.bi-bar-chart-line.me-2
+                    | Doanh thu theo ngày
+                  small.text-muted Theo dõi xu hướng doanh thu hàng ngày
+                .chart-actions
+                  .btn-group.btn-group-sm
+                    button.btn.btn-outline-primary.active(data-period="7d") 7D
+                    button.btn.btn-outline-primary(data-period="30d") 30D
+                    button.btn.btn-outline-primary(data-period="90d") 90D
+            .card-body.pt-0
+              .chart-container.position-relative
+                canvas#revenueChart
+                .chart-overlay.d-none.justify-content-center.align-items-center.position-absolute.w-100.h-100
+                  .spinner-border.text-primary(role="status")
+        
+        .col-12.col-xl-4
+          .card.chart-card
+            .card-header.bg-transparent.border-0.pb-0
+              h6.mb-0
+                i.bi.bi-pie-chart.me-2
+                | Phân bố theo chủ đề
+            .card-body.pt-2
+              .text-center.mb-3
+                .revenue-summary
+                  small.text-muted.text-uppercase Tổng doanh thu tích lũy
+                  .display-6.mb-0= (K.revenueAll || 0).toLocaleString('vi-VN')
+                  small.text-muted VND
+              .chart-container.position-relative
+                canvas#topicChart
+                .chart-overlay.d-none.justify-content-center.align-items-center.position-absolute.w-100.h-100
+                  .spinner-border.text-primary(role="status")
+
+    .charts-container
+      .row.g-4
+        .col-12.col-xl-7
+          .card.chart-card
+            .card-header.bg-transparent.border-0.pb-0
+              .d-flex.justify-content-between.align-items-center
+                .chart-title
+                  h6.mb-1
+                    i.bi.bi-graph-up.me-2
+                    | Ghi danh mới theo ngày
+                  small.text-muted Theo dõi xu hướng ghi danh mới
+                .chart-stats
+                  small.text-muted Tăng trưởng: 
+                  span.badge.bg-success +12.5%
+            .card-body.pt-0
+              .chart-container.position-relative
+                canvas#enrollChart
+                .chart-overlay.d-none.justify-content-center.align-items-center.position-absolute.w-100.h-100
+                  .spinner-border.text-primary(role="status")
+        
+        .col-12.col-xl-5
+          .card.chart-card
+            .card-header.bg-transparent.border-0.pb-0
+              .d-flex.justify-content-between.align-items-center
+                h6.mb-0
+                  i.bi.bi-trophy.me-2
+                  | Top 5 khóa học
+                small.text-muted Theo doanh thu
+            .card-body.pt-2
+              .chart-container.position-relative
+                canvas#topCourseChart
+                .chart-overlay.d-none.justify-content-center.align-items-center.position-absolute.w-100.h-100
+                  .spinner-border.text-primary(role="status")
+
+    if error
+      .row.mt-4
+        .col-12
+          .alert.alert-danger.d-flex.align-items-center
+            i.bi.bi-exclamation-triangle-fill.me-2
+            div= error
+
+block scripts
+  //- ĐỔ JSON ra từng dòng (mỗi !{} trên 1 dòng)
+  script.
+    window.__DASH__ = {};
+    window.__DASH__.revenueDaily = !{JSON.stringify((C && C.revenueDaily) ? C.revenueDaily : {labels:[], data:[]})};
+    window.__DASH__.enrollDaily  = !{JSON.stringify((C && C.enrollDaily)  ? C.enrollDaily  : {labels:[], data:[]})};
+    window.__DASH__.byTopic      = !{JSON.stringify((C && C.byTopic)      ? C.byTopic      : [])};
+    window.__DASH__.topCourses   = !{JSON.stringify((C && C.topCourses)   ? C.topCourses   : [])};
+    window.__DASH__.filters      = !{JSON.stringify(F)};
+
+  script(src="https://cdn.jsdelivr.net/npm/chart.js@4.4.6/dist/chart.umd.min.js")
+  script(src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js")
+  script(src="/public/admin/js/dashboard.js")
