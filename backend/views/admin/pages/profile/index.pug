@@ -1,0 +1,30 @@
+extends ../../layouts/default.pug
+
+block main
+  .container.mt-3(style="max-width:860px")
+    h3.mb-3 Hồ sơ quản trị
+
+    .card.mb-3
+      .card-body.d-flex.align-items-center
+        if admin.avatarUrl
+          img.rounded.me-3(src=admin.avatarUrl, alt="avatar", width="80", height="80")
+        else
+          .rounded-circle.bg-secondary.me-3.d-flex.align-items-center.justify-content-center(style="width:80px;height:80px;color:#fff;")
+            i.bi.bi-person.fs-3
+        .flex-grow-1
+          h5.mb-1 #{admin.fullName || 'No Name Set'}
+          .text-muted
+            p.mb-0
+              | Email: #{admin.email} 
+              span.mx-2 &bull;
+              | Trạng thái: #{admin.status} 
+              span.mx-2 &bull;
+              | Quyền: #{admin.roles ? admin.roles.join(', ') : 'N/A'}
+              
+    .card
+      .card-body
+        h6.mb-2 Bảo mật
+        p.mb-2 Bạn có thể đăng xuất khỏi phiên làm việc admin.
+        a.btn.btn-outline-danger(href=`${prefixAdmin}/logout`)
+          i.bi.bi-box-arrow-right.me-1
+          | Đăng xuất

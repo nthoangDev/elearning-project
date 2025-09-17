@@ -20,7 +20,6 @@ function kindFromMime(mime = '') {
   return 'OTHER';
 }
 
-// <-- SỬA Ở ĐÂY: dùng resource_type: 'auto', và ưu tiên file.path
 async function uploadToCloudinary(file, folder) {
   const localPath = file.path || path.resolve(file.destination, file.filename);
 

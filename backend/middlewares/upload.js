@@ -55,6 +55,30 @@ function makeDiskUploader({
   return multiple ? m.array(field, maxCount) : m.single(field);
 }
 
+function makeMultiFilesUploader({
+  subdir,
+  fields = 'files',        // <- mặc định chỉ 'files'
+  accept = 'any',
+  maxSizeMB = 50,
+  maxCount = 10
+}) {
+  const storage = makeStorage(subdir);
+  const fileFilter = accept === 'any' ? anyCommonFileFilter : imageOnlyFilter;
+
+  const m = multer({
+    storage,
+    fileFilter,
+    limits: { fileSize: maxSizeMB * 1024 * 1024 }
+  });
+
+  // hỗ trợ cả string lẫn array
+  const fieldNames = Array.isArray(fields) ? fields : [fields];
+  const spec = fieldNames.map((name) => ({ name, maxCount }));
+  return m.fields(spec);
+}
+
+/* ========== Uploaders ========== */
+/* ẢNH — giữ nguyên dùng makeDiskUploader */
 const uploadCourseImage = makeDiskUploader({
   subdir: 'courses',
   field: 'image',
@@ -71,15 +95,6 @@ const uploadAvatarImage = makeDiskUploader({
   multiple: false
 });
 
-const uploadLessonFiles = makeDiskUploader({
-  subdir: 'lessons',
-  field: 'files',
-  accept: 'any',
-  maxSizeMB: 50,
-  multiple: true,
-  maxCount: 10
-});
-
 const uploadLessonImages = makeDiskUploader({
   subdir: 'lessons/images',
   field: 'images',
@@ -89,11 +104,29 @@ const uploadLessonImages = makeDiskUploader({
   maxCount: 10
 });
 
+const uploadLessonFiles = makeMultiFilesUploader({
+  subdir: 'lessons',
+  fields: 'files',         
+  accept: 'any',
+  maxSizeMB: 50,
+  maxCount: 10
+});
+
+const uploadAssessmentFiles = makeMultiFilesUploader({
+  subdir: 'assessments',
+  fields: 'files',         
+  accept: 'any',
+  maxSizeMB: 50,
+  maxCount: 10
+});
+
 module.exports = {
   makeDiskUploader,
+  makeMultiFilesUploader,
   uploadCourseImage,
   uploadAvatarImage,
   uploadLessonFiles,
-  uploadLessonImages
+  uploadLessonImages,
+  uploadAssessmentFiles
 };
 

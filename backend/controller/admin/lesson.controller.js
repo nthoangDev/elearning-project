@@ -10,6 +10,13 @@ const { buildResourcesFromUrls, makeResourceFromFile } = require('../../helpers/
 const VALID_TYPES = ['VIDEO', 'DOCUMENT', 'QUIZ'];
 const prefixOf = (req) => req.app?.locals?.prefixAdmin || '/admin';
 
+function collectMulterFiles(req) {
+  if (Array.isArray(req.files)) return req.files;               // upload.array(...)
+  if (req.files && typeof req.files === 'object')               // upload.fields(...)
+    return Object.values(req.files).flat();
+  if (req.file) return [req.file];                              // upload.single(...)
+  return [];
+}
 
 // [GET] /admin/courses/:courseId/lessons
 module.exports.list = async (req, res) => {
@@ -127,9 +134,12 @@ module.exports.create = async (req, res) => {
       req.flash?.('error', req.fileValidationError);
       return res.redirect(`${prefix}/courses/${rawCourseId}/lessons/create`);
     }
-    if (req.files?.length) {
-      const folder = `lessons/${rawCourseId}`;
-      for (const [i, f] of req.files.entries()) {
+
+    const uploads = collectMulterFiles(req);
+    if (uploads.length) {
+      const folder = `elearning/lessons/${rawCourseId}`;
+      for (const [i, f] of uploads.entries()) {
+
         try {
           const r = await makeResourceFromFile(f, folder); // trả url Cloudinary
           r.order = resources.length + 1 + i;
@@ -173,7 +183,7 @@ module.exports.showEdit = async (req, res) => {
     const l = await Lesson.findById(req.params.id).lean();
     if (!l) {
       req.flash?.('error', 'Bài học không hợp lệ.');
-      return res.redirect(req.get('referer') || `${req.app.locals.prefixAdmin}/courses/${courseId}/lessons`);
+      return res.redirect(req.get('referer') || `${prefixOf(req)}/courses`);
     }
 
     const sections = await Section.find({ course: l.course }).sort({ sortOrder: 1 }).lean();
@@ -221,9 +231,11 @@ module.exports.update = async (req, res) => {
       req.flash?.('error', req.fileValidationError);
       return res.redirect(`${prefixOf(req)}/lessons/${l._id}/edit`);
     }
-    if (req.files?.length) {
-      const folder = `lessons/${String(l.course)}`;
-      for (const [i, f] of req.files.entries()) {
+
+    const uploads = collectMulterFiles(req);
+    if (uploads.length) {
+      const folder = `elearning/lessons/${String(l.course)}`;
+      for (const [i, f] of uploads.entries()) {
         try {
           const r = await makeResourceFromFile(f, folder);
           r.order = resources.length + 1 + i;
@@ -294,7 +306,7 @@ module.exports.move = async (req, res) => {
       await cur.save();
       await neighbor.save();
     }
-    req.flash("success", "Đã thay đổi thứ tự bài học!")
+    req.flash("success", "Đã thay đổi thứ tự bài học!");
     return res.redirect(req.get('referer') || `${prefixOf(req)}/courses`);
   } catch (err) {
     console.error('[lessons.move] error:', err);

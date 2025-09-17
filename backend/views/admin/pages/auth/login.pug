@@ -1,0 +1,70 @@
+extends ../../layouts/default
+
+block head
+  link(rel="stylesheet", href="/public/admin/css/admin-login.css")
+
+block main
+  .login-page
+    .login-container
+      .login-card
+        //- Header Section
+        .login-header
+          .login-logo
+            .logo-text
+              h3.brand-name Admin Portal
+              p.brand-subtitle Hệ thống quản trị
+        
+        //- Form Section
+        .login-form-section
+          .form-header
+            h4.form-title Đăng nhập
+            p.form-subtitle Truy cập vào bảng điều khiển quản trị
+          
+          //- Error Alert
+          if error
+            .error-alert
+              .alert-content
+                i.bi.bi-exclamation-triangle
+                span= error
+          
+          //- Login Form
+          form.login-form(method="post" action=`${prefixAdmin}/login`)
+            .form-group
+              label.form-label(for="email")
+                i.bi.bi-envelope
+                span Email
+              .input-wrapper
+                input#email.form-control(
+                  type="email" 
+                  name="email" 
+                  required
+                  placeholder="admin@example.com"
+                )
+                .input-icon
+                  i.bi.bi-person
+
+            .form-group
+              label.form-label(for="password")
+                i.bi.bi-lock
+                span Mật khẩu
+              .input-wrapper
+                input#password.form-control(
+                  type="password" 
+                  name="password" 
+                  required
+                  placeholder="Nhập mật khẩu"
+                )
+                .input-icon
+                  i.bi.bi-key
+
+            .form-actions
+              button.btn.btn-primary(type="submit")
+                i.bi.bi-box-arrow-in-right
+                span Đăng nhập
+        
+        //- Footer Section
+        .login-footer
+          .access-note
+            .note-icon
+              i.bi.bi-info-circle
+            .note-text Chỉ dành cho tài khoản có vai trò ADMIN

@@ -1,0 +1,23 @@
+/* src/components/student/cart.css */
+.cart-empty {
+  text-align: center;
+  padding: 64px 0;
+}
+.cart-item .qty-row {
+  display: inline-flex;
+  gap: 10px;
+  align-items: center;
+}
+.cart-item .qty {
+  min-width: 32px;
+  text-align: center;
+  font-weight: 600;
+}
+.cart-summary .total {
+  font-size: 1.25rem;
+  color: #0f172a;
+  font-weight: 800;
+}
+.price {
+  font-weight: 700;
+}
