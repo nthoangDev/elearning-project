@@ -10,7 +10,6 @@ const { buildResourcesFromUrls, makeResourceFromFile } = require('../../helpers/
 const VALID_TYPES = ['VIDEO', 'DOCUMENT', 'QUIZ'];
 const prefixOf = (req) => req.app?.locals?.prefixAdmin || '/admin';
 
-// Gom file từ Multer về dạng mảng, hỗ trợ mọi mode: single/array/fields
 function collectMulterFiles(req) {
   if (Array.isArray(req.files)) return req.files;               // upload.array(...)
   if (req.files && typeof req.files === 'object')               // upload.fields(...)
@@ -18,7 +17,6 @@ function collectMulterFiles(req) {
   if (req.file) return [req.file];                              // upload.single(...)
   return [];
 }
-
 
 // [GET] /admin/courses/:courseId/lessons
 module.exports.list = async (req, res) => {
@@ -63,7 +61,6 @@ module.exports.list = async (req, res) => {
   }
 };
 
-
 // [GET] /admin/courses/:courseId/lessons/create
 module.exports.showCreate = async (req, res) => {
   try {
@@ -86,7 +83,6 @@ module.exports.showCreate = async (req, res) => {
     res.status(500).send('Cannot load create form');
   }
 };
-
 
 // [POST] /admin/courses/:courseId/lessons
 module.exports.create = async (req, res) => {
@@ -143,6 +139,7 @@ module.exports.create = async (req, res) => {
     if (uploads.length) {
       const folder = `elearning/lessons/${rawCourseId}`;
       for (const [i, f] of uploads.entries()) {
+
         try {
           const r = await makeResourceFromFile(f, folder); // trả url Cloudinary
           r.order = resources.length + 1 + i;
@@ -203,7 +200,6 @@ module.exports.showEdit = async (req, res) => {
     res.status(500).send('Cannot load edit form');
   }
 };
-
 
 // [PUT] /admin/courses/:courseId/lessons/:id
 module.exports.update = async (req, res) => {
@@ -278,7 +274,6 @@ module.exports.update = async (req, res) => {
   }
 };
 
-
 // [DELETE] /admin/courses/:courseId/lessons/:id/delete
 module.exports.remove = async (req, res) => {
   try {
@@ -291,7 +286,6 @@ module.exports.remove = async (req, res) => {
     return res.redirect(req.get('referer') || `${prefixOf(req)}/courses`);
   }
 };
-
 
 // [PATCH] /admin/courses/:courseId/lessons/:id/move
 module.exports.move = async (req, res) => {

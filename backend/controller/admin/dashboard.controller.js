@@ -1,4 +1,3 @@
-// controllers/admin/dashboard.controller.js
 const User = require('../../models/user.model');
 const Course = require('../../models/course.model');
 const Enrollment = require('../../models/enrollement.model');
@@ -175,3 +174,4 @@ module.exports.index = async (req, res) => {
     });
   }
 };
+

@@ -34,3 +34,4 @@ function resolveKind({ preferKind, lessonType, mime, url } = {}) {
 }
 
 module.exports = { detectKind, kindFromMime, resolveKind };
+

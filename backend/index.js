@@ -12,6 +12,7 @@ const routeAdmin = require('./routes/admin/index.route');
 const routeClient = require('./routes/client/index.route');
 const database = require('./config/database');
 const systemConfig = require('./config/system');
+const flash = require("express-flash");
 
 database.connect();
 

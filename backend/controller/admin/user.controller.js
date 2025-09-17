@@ -2,7 +2,6 @@ const bcrypt = require('bcryptjs');
 const User = require('../../models/user.model');
 const cloudinary = require('../../config/cloudinary');
 const fs = require('fs');
-
 const searchHelper = require('../../helpers/search');
 const pagination = require('../../helpers/pagination');
 const filterStatus = require("../../helpers/filterStatus");
