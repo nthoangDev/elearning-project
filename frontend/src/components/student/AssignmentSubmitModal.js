@@ -14,12 +14,12 @@ export default function AssignmentSubmitModal({ show, onHide, assessmentId, onSu
     setErr("");
     try {
       setSubmitting(true);
-      const url = endpoints?.submitAssignment?.(assessmentId) || `/api/student/assessments/${assessmentId}/submit-assignment`;
+      const url = endpoints?.submitAssignment?.(assessmentId);
       const fd = new FormData();
       if (startedAt) fd.append("startedAt", startedAt);
       if (textAnswer) fd.append("textAnswer", textAnswer);
       // Quan trọng: key 'attachments' khớp với Multer trên BE
-      Array.from(files || []).forEach((f) => fd.append("attachments", f));
+      Array.from(files || []).forEach((f) => fd.append("files", f));
 
       const res = await authApis().post(url, fd, { headers: { "Content-Type": "multipart/form-data" } });
       onSubmitted?.(res.data);

@@ -10,6 +10,7 @@ const studentCheckoutRoutes = require('./student.checkout.routes');
 const studentWebhookRoutes = require('./webhooks.routes');
 const studentLearningRoutes = require('./student.learning.routes');
 const studentReminderRoutes = require('./student.reminder.routes');
+const studentQnaRoutes = require('./student.qna.route');
 const { requireInstructor } = require('../../middlewares/require-instructor');
 const { requireStudent } = require('../../middlewares/require-student');
 
@@ -25,6 +26,7 @@ module.exports = (app) => {
     app.use('/api/student', requireStudent, studentCheckoutRoutes);
     app.use('/api/student', requireStudent, studentLearningRoutes);
     app.use('/api/student', requireStudent, studentReminderRoutes);
+    app.use('/api/student', requireStudent, studentQnaRoutes);
     app.use('/api', studentWebhookRoutes);
 
 }

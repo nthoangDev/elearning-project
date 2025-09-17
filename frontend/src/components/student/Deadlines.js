@@ -123,8 +123,9 @@ export default function Deadlines() {
 
       // Nếu chưa có -> gọi detail để lấy lesson
       if (!lessonId) {
-        console.log(item._id)
-        const r = await authApis().get(endpoints.assessmentDetail(item._id));
+        const r = await authApis().get(
+          endpoints?.assessmentDetail?.(item._id) || `/api/student/assessments/${item._id}`
+        );
         lessonId =
           r?.data?.lesson?._id || r?.data?.lesson || r?.data?.lessonId;
         if (!type && r?.data?.assessmentType)
@@ -137,9 +138,21 @@ export default function Deadlines() {
         return;
       }
 
-      // Điều hướng đúng lesson + query để LessonView tự bật modal
-      const param = type === "QUIZ" ? "quiz" : "assignment";
-      nav(`/learning/lesson/${lessonId}?${param}=${encodeURIComponent(item._id)}`);
+      // Điều hướng đúng lesson:
+      // - Assignment:
+      //    + Nếu CHƯA nộp -> mở modal nộp: ?assignment=<id>
+      //    + Nếu ĐÃ nộp -> mở thẳng khung "Xem kết quả": ?view=<id>
+      // - Quiz: giữ nguyên modal quiz (?quiz=<id>)
+      const isSubmitted = !!item.submitted;
+      if (type === "ASSIGNMENT") {
+        const query = isSubmitted
+          ? `view=${encodeURIComponent(item._id)}`
+          : `assignment=${encodeURIComponent(item._id)}`;
+        nav(`/learning/lesson/${lessonId}?${query}`);
+      } else {
+        // QUIZ
+        nav(`/learning/lesson/${lessonId}?quiz=${encodeURIComponent(item._id)}`);
+      }
     } catch (e) {
       nav(`/learning/deadlines?focus=${encodeURIComponent(item._id)}`);
     }
@@ -331,7 +344,9 @@ export default function Deadlines() {
                         className="fw-semibold px-3"
                       >
                         <i className={`bi ${d.submitted ? "bi-eye" : "bi-pencil-square"} me-1`}></i>
-                        {d.submitted ? "Xem" : ((d.type || d.assessmentType) === "QUIZ" ? "Làm ngay" : "Nộp ngay")}
+                        {d.submitted
+                          ? "Xem"
+                          : ((d.type || d.assessmentType) === "QUIZ" ? "Làm ngay" : "Nộp ngay")}
                       </Button>
                     </Col>
                   </Row>

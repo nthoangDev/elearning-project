@@ -14,10 +14,12 @@ function safeParseJSON(val, fallback = {}) {
   if (typeof val === 'object') return val;
   try { return JSON.parse(val); } catch { return fallback; }
 }
+
 function collectFiles(req) {
-  if (Array.isArray(req)) return req;
-  if (req.files && typeof req.files === 'object') return Object.values(req.files).flat();
-  if (req.file) return [req.file];
+  if (Array.isArray(req.files)) return req.files;          // upload.array('files')
+  if (req.files && typeof req.files === 'object')          // upload.fields(...)
+    return Object.values(req.files).flat();
+  if (req.file) return [req.file];                         // upload.single(...)
   return [];
 }
 

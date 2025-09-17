@@ -67,6 +67,9 @@ export const endpoints = {
   assessmentDetail: (id) => `/api/student/assessments/${id}`,
   submitQuiz:      (id) => `/api/student/assessments/${id}/submit-quiz`,
   submitAssignment: (id) => `/api/student/assessments/${id}/submit-assignment`,
+
+  submissionThread: (assessmentId) => `/api/student/assessments/${assessmentId}/thread`,
+  addSubmissionComment: (submissionId) => `/api/student/submissions/${submissionId}/comments`,
 };
 
 // Axios instances
